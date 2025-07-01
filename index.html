@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="description" content="Работен график с календар за офисни дни">
+    <title>Работен График - Календар</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📅 Работен График</h1>
+            <p class="subtitle">Календар с офисни дни</p>
+            <div class="current-time">
+                <span id="currentTime"></span>
+            </div>
+        </header>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color office" aria-hidden="true"></div>
+                <span>В офиса</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color remote" aria-hidden="true"></div>
+                <span>От вкъщи</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color weekend" aria-hidden="true"></div>
+                <span>Уикенд</span>
+            </div>
+        </div>
+        <div class="current-info">
+            <div class="current-date">
+                <h2>Днес: <span id="currentDate"></span></h2>
+                <div id="todayStatus" class="status"></div>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button id="prevMonth" class="nav-btn" aria-label="Предишен месец">‹</button>
+                <h3 id="currentMonthYear"></h3>
+                <button id="nextMonth" class="nav-btn" aria-label="Следващ месец">›</button>
+            </div>
+            
+            <div class="calendar-controls">
+                <button id="goToToday" class="today-btn">Днес</button>
+            </div>
+            
+            <div class="calendar-grid">
+                <div class="calendar-weekdays">
+                    <div class="weekday">Пон</div>
+                    <div class="weekday">Вто</div>
+                    <div class="weekday">Сря</div>
+                    <div class="weekday">Чет</div>
+                    <div class="weekday">Пет</div>
+                    <div class="weekday">Съб</div>
+                    <div class="weekday">Нед</div>
+                </div>
+                <div id="calendarDays" class="calendar-days" role="grid" aria-label="Календар"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
