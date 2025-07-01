@@ -392,20 +392,24 @@ function updateDateTime() {
     }
 }
 
+function scheduleDayUpdate() {
+    const now = new Date();
+    // Изчисли колко ms до следващия ден (00:00:00)
+    const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+    const msToNextDay = nextDay - now;
+
+    setTimeout(() => {
+        updateDateTime(); // ще обнови календара и статуса
+        scheduleDayUpdate(); // насрочи следващото обновяване
+    }, msToNextDay);
+}
+
 function startAutoUpdate() {
-    // Обновяваме веднъж при стартиране
     updateDateTime();
+    setInterval(showCurrentTime, 1000); // часовникът се обновява всяка секунда
+    setInterval(showCurrentStatus, 60000); // статусът се обновява всяка минута
+    scheduleDayUpdate(); // календарът се обновява само при нов ден
 
-    // Обновяваме времето всяка секунда
-    setInterval(showCurrentTime, 1000);
-
-    // Обновяваме датата и статуса на всяка минута
-    setInterval(() => {
-        showCurrentStatus();
-        updateDateTime();
-    }, 60000);
-
-    // Обновяваме при фокус на прозореца (когато потребителят се върне към таба)
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             updateDateTime();
