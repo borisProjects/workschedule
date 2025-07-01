@@ -372,57 +372,39 @@ function enhanceMobileNavigation() {
     }
 }
 
-// Функция за автоматично обновяване на датата и статуса
+let lastRenderedDate = new Date();
+
 function updateDateTime() {
     const now = new Date();
-    
-    // Обновяваме текущото време
     showCurrentTime();
-    
-    // Обновяваме текущия статус
     showCurrentStatus();
-    
-    // Проверяваме дали трябва да обновим календара (ако сме в текущия месец)
-    if (currentMonth === now.getMonth() && currentYear === now.getFullYear()) {
+
+    // Обновявай календара само ако е нов ден
+    if (
+        now.getDate() !== lastRenderedDate.getDate() ||
+        now.getMonth() !== lastRenderedDate.getMonth() ||
+        now.getFullYear() !== lastRenderedDate.getFullYear()
+    ) {
+        currentMonth = now.getMonth();
+        currentYear = now.getFullYear();
         showCalendar();
-    }
-    
-    // Проверяваме дали е нов ден и трябва да преминем към текущия месец
-    const today = new Date();
-    if (currentMonth !== today.getMonth() || currentYear !== today.getFullYear()) {
-        currentMonth = today.getMonth();
-        currentYear = today.getFullYear();
-        showCalendar();
+        lastRenderedDate = now;
     }
 }
 
-// Функция за стартиране на автоматичното обновяване
 function startAutoUpdate() {
     // Обновяваме веднъж при стартиране
     updateDateTime();
-    
+
     // Обновяваме времето всяка секунда
     setInterval(showCurrentTime, 1000);
-    
+
     // Обновяваме датата и статуса на всяка минута
     setInterval(() => {
         showCurrentStatus();
-        
-        // Проверяваме дали трябва да обновим календара
-        const now = new Date();
-        if (currentMonth === now.getMonth() && currentYear === now.getFullYear()) {
-            showCalendar();
-        }
-        
-        // Проверяваме дали е нов ден
-        const today = new Date();
-        if (currentMonth !== today.getMonth() || currentYear !== today.getFullYear()) {
-            currentMonth = today.getMonth();
-            currentYear = today.getFullYear();
-            showCalendar();
-        }
+        updateDateTime();
     }, 60000);
-    
+
     // Обновяваме при фокус на прозореца (когато потребителят се върне към таба)
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
