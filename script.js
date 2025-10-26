@@ -100,6 +100,27 @@ function getStatusDescription(status) {
     }
 }
 
+// Функция за намиране на последния работен ден в месеца
+function isLastWorkingDayOfMonth(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    
+    // Намираме последния ден от месеца
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    
+    // Търсим последния работен ден (понеделник-петък)
+    let lastWorkingDay = new Date(lastDayOfMonth);
+    
+    while (lastWorkingDay.getDay() === 0 || lastWorkingDay.getDay() === 6) {
+        lastWorkingDay.setDate(lastWorkingDay.getDate() - 1);
+    }
+    
+    // Проверяваме дали датата е последният работен ден
+    return date.getDate() === lastWorkingDay.getDate() && 
+           date.getMonth() === lastWorkingDay.getMonth() &&
+           date.getFullYear() === lastWorkingDay.getFullYear();
+}
+
 // Функция за намиране на следващия офис ден
 function getNextOfficeDay(fromDate) {
     const searchDate = new Date(fromDate);
@@ -230,13 +251,30 @@ function showCalendar() {
                 dayElement.setAttribute('aria-current', 'date');
             }
             
+            // Проверка за последен работен ден от месеца
+            const isPayday = day.isCurrentMonth && isLastWorkingDayOfMonth(day.date);
+            if (isPayday) {
+                dayElement.classList.add('payday');
+            }
+            
             const dayNumber = document.createElement('div');
             dayNumber.className = 'day-number';
             dayNumber.textContent = day.dayNumber;
             
             const dayStatus = document.createElement('div');
             dayStatus.className = 'day-status';
-            dayStatus.textContent = getStatusDescription(day.status);
+            
+            // Ако е ден на заплата, показваме само заплата
+            if (isPayday) {
+                // На мобилни - без емоджи, на desktop - с емоджи
+                if (isMobile()) {
+                    dayStatus.textContent = 'Заплата';
+                } else {
+                    dayStatus.textContent = '💰 Заплата 💰';
+                }
+            } else {
+                dayStatus.textContent = getStatusDescription(day.status);
+            }
             
             dayElement.appendChild(dayNumber);
             dayElement.appendChild(dayStatus);
