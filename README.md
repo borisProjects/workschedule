@@ -140,7 +140,7 @@ Simply upload the files and you're live!
 
 ## 📄 License
 
-Free to use and modify.
+Not free to use and modify.
 
 ---
 
