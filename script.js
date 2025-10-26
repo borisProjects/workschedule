@@ -228,12 +228,12 @@ function showCurrentStatus() {
             statusText = '🏢 Днес трябва да съм в офиса';
             statusClass = 'status office';
         } else {
-            // За дистанционни дни и уикенди показваме само следващия офис ден
             if (nextOfficeDay) {
                 const nextDay = DAY_NAMES[nextOfficeDay.getDay()];
                 const nextDate = `${nextOfficeDay.getDate()}.${(nextOfficeDay.getMonth() + 1).toString().padStart(2, '0')}`;
-                statusText = `🏢 Следващ офис ден: ${nextDay}, ${nextDate}`;
-                statusClass = 'status remote';
+                todayStatusElement.innerHTML = `🏢 Следващ офис ден: <strong>${nextDay}, ${nextDate}</strong>`;
+                todayStatusElement.className = 'status remote';
+                return;
             } else {
                 statusText = '🏠 Работя от вкъщи';
                 statusClass = 'status remote';
