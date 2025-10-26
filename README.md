@@ -1,103 +1,147 @@
-# 📅 Work Schedule - Calendar
+# 📊 Work Dashboard
 
-A web app for tracking your office/home work schedule with a modern calendar view.
+A modern web application for tracking office schedules and QC activities with an elegant dark mode interface.
 
-## 🚀 How to Start the App
+## 🚀 Quick Start
 
 1. Open `index.html` in your web browser
-2. The app will load automatically and show your work schedule
+2. The app will load automatically and display your schedules
 
 ## 📋 Features
 
-- **Current Status**: Shows if you need to be in the office or work from home today
-- **Live Clock**: Displays the current time in real time
-- **Calendar View**: Monthly calendar with navigation
-- **Automatic Updates**: Status and date update automatically
-- **Responsive Design**: Works on all devices
-- **History**: You can view your schedule for past dates
+### 🏢 Office Calendar
 
-## 🏢 Work Schedule Logic
+- **Smart Schedule**: 3-week rotating pattern
+  - Week 1: Monday, Tuesday (office days)
+  - Week 2: Wednesday, Thursday (office days)
+  - Week 3: Friday (office day)
+- **Payday Indicator**: Green border on last working day of the month
+- **Next Office Day**: Shows when you need to be in the office next
 
-The app is configured with the following logic:
+### 📋 QC Calendar
 
-- **Start date**: 07.07.2025 (Monday)
-- **Weeks 07.07-11.07 and 14.07-18.07**: Office days are Monday and Tuesday
-- **Next 2 weeks**: Office days are Wednesday and Thursday
-- **Then again 2 weeks**: Monday and Tuesday in the office
-- **Cycle**: 2 weeks Mon-Tue, 2 weeks Wed-Thu (repeats throughout the year)
+- **Monthly QC**: First full Monday-Friday week of each month
+- **Weekly QC**: Every Wednesday and Thursday (all other weeks)
+- **Clear Visual Indicators**: Red for Monthly QC, beige for Weekly QC
 
-### 📅 Past Dates Support
+### ⚙️ General Features
 
-The app can show your schedule for dates before 07.07.2025. The same cycle logic is applied retroactively.
+- **Live Clock**: Real-time clock display
+- **Calendar Switcher**: Toggle between Office and QC calendars
+- **Monthly Navigation**: Browse past and future months
+- **Current Status**: Shows today's schedule at a glance
+- **Responsive Design**: Optimized for all devices
+- **Dark Mode**: Elegant black background with warm color palette
+- **Keyboard Shortcuts**: Navigate quickly with keyboard
 
-## 🎨 Color Legend
+## 🎨 Color Scheme
 
-- 🟢 **Green**: Office days
-- 🔵 **Blue**: Work from home
-- 🟠 **Orange**: Weekend
-- 🔵 **Blue border**: Today (with animation)
+### Office Calendar
+
+- **Office Days**: #D8C4B6 (warm beige)
+- **Remote Days**: #3E5879 (dark blue)
+- **Weekend**: #213555 (navy blue)
+- **Payday**: Green border (#10b981)
+
+### QC Calendar
+
+- **Monthly QC**: #B85C5C (muted red - important!)
+- **Weekly QC**: #C9A687 (light beige)
+- **No QC**: #2a3a4a (dark grey-blue)
 
 ## ⌨️ Keyboard Shortcuts
 
 - **← →**: Navigate between months
-- **Home**: Jump to current month
-- **T**: Quick jump to today
+- **Home** or **T**: Jump to current month
+- **Click**: Tap days for visual feedback (mobile)
 
-## 📱 Mobile Gestures
+## 📱 Mobile Optimization
 
-- **Swipe left**: Next month
-- **Swipe right**: Previous month
-- **Tap on day**: Visual feedback
+- **Touch-Friendly**: Large touch targets (48px+)
+- **Adaptive Text**: Scales perfectly on all screen sizes
+- **No Zoom Conflicts**: Swipe gestures removed for better zoom experience
+- **Haptic Feedback**: Vibration on navigation (supported devices)
+
+## 🔧 Configuration
+
+### Office Schedule
+
+Edit in `script.js`:
+
+```javascript
+const WORK_SCHEDULE = {
+  startDate: new Date(2025, 9, 27),
+  pattern: [
+    { days: [1, 2], weeks: 1 },
+    { days: [3, 4], weeks: 1 },
+    { days: [5], weeks: 1 },
+  ],
+};
+```
+
+### QC Schedule
+
+The QC logic is automatic:
+
+- First full Monday-Friday week = Monthly QC
+- All other Wednesday/Thursday = Weekly QC
 
 ## 📁 File Structure
 
 ```
 workschedule/
 ├── index.html      # Main HTML file
-├── styles.css      # CSS styles
-├── script.js       # JavaScript logic
-└── README.md       # Documentation
+├── styles.css      # All styles (dark mode)
+├── script.js       # Application logic
+└── README.md       # This file
 ```
 
-## 🔧 Customization
-
-To change the work schedule, edit the configuration in `script.js`:
-
-```javascript
-const WORK_SCHEDULE = {
-  startDate: new Date(2025, 6, 7), // Change the start date
-  pattern: [
-    { days: [1, 2], weeks: 2 }, // Monday and Tuesday for 2 weeks
-    { days: [3, 4], weeks: 2 }, // Wednesday and Thursday for 2 weeks
-  ],
-};
-```
-
-## 🌐 Supported Browsers
+## 🌐 Browser Support
 
 - Chrome (recommended)
 - Firefox
 - Safari
 - Edge
+- Mobile browsers (iOS Safari, Chrome)
 
-## 📱 Mobile Support
+## 💡 Usage Tips
 
-The app is fully responsive and works great on mobile devices with touch gestures and haptic feedback.
+1. **Switch Calendars**: Click the buttons at the top to toggle views
+2. **Navigate Months**: Use ← → buttons or keyboard arrows
+3. **Quick Return**: Click "Днес" button to return to current month
+4. **Check Status**: Today's schedule is always displayed at the top
+5. **Mobile**: Zoom freely without triggering month changes
 
-## ⚡ Automatic Updates
+## ⚡ Auto-Update Features
 
-- **Time**: Updates every second
-- **Date/Status**: Updates every minute
-- **Calendar**: Automatically jumps to the current month on a new day
-- **Visibility**: Updates when you return to the tab
+- **Clock**: Updates every second
+- **Status**: Updates every minute
+- **Calendar**: Auto-updates at midnight
+- **Tab Focus**: Refreshes when you return to the tab
 
 ## ☁️ Deployment
 
-You can deploy this app for free using:
+No build step required! Deploy to:
 
 - **GitHub Pages**
 - **Vercel**
 - **Netlify**
-- Or any static hosting
+- Any static hosting service
 
-No backend or build step is required. Just upload the files and you're live!
+Simply upload the files and you're live!
+
+## 🎯 Future Features
+
+- [ ] Export calendar to PDF
+- [ ] Add holidays
+- [ ] Custom color themes
+- [ ] Multiple team schedules
+- [ ] Email notifications
+
+## 📄 License
+
+Free to use and modify.
+
+---
+
+**Powered by Bobi** 🚀
