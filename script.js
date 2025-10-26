@@ -1,12 +1,13 @@
 // Конфигурация на работния график
 const WORK_SCHEDULE = {
-    // Начална дата: 07.07.2025 (понеделник) - първата седмица с понеделник и вторник
-    startDate: new Date(2025, 6, 7), // Месецът е 0-базиран, така че 6 = юли
+    // Начална дата: 27.10.2025 (понеделник) - първата седмица с понеделник и вторник
+    startDate: new Date(2025, 9, 27), // Месецът е 0-базиран, така че 9 = октомври
     
-    // График: 2 седмици понеделник-вторник, 2 седмици сряда-четвъртък
+    // График: 3-седмичен цикъл
     pattern: [
-        { days: [1, 2], weeks: 2 }, // Понеделник (1) и вторник (2) за 2 седмици
-        { days: [3, 4], weeks: 2 }  // Сряда (3) и четвъртък (4) за 2 седмици
+        { days: [1, 2], weeks: 1 }, // Седмица 1: Понеделник (1) и вторник (2)
+        { days: [3, 4], weeks: 1 }, // Седмица 2: Сряда (3) и четвъртък (4)
+        { days: [5], weeks: 1 }     // Седмица 3: Петък (5)
     ]
 };
 
@@ -99,6 +100,22 @@ function getStatusDescription(status) {
     }
 }
 
+// Функция за намиране на следващия офис ден
+function getNextOfficeDay(fromDate) {
+    const searchDate = new Date(fromDate);
+    searchDate.setDate(searchDate.getDate() + 1); // Започваме от утре
+    
+    // Търсим максимум 30 дни напред
+    for (let i = 0; i < 30; i++) {
+        if (isOfficeDay(searchDate)) {
+            return new Date(searchDate);
+        }
+        searchDate.setDate(searchDate.getDate() + 1);
+    }
+    
+    return null;
+}
+
 // Функция за показване на текущото време
 function showCurrentTime() {
     const now = new Date();
@@ -120,16 +137,29 @@ function showCurrentStatus() {
     currentDateElement.textContent = formatDate(today);
     
     const status = getDayStatus(today);
+    const nextOfficeDay = getNextOfficeDay(today);
+    
+    let statusText = '';
+    let statusClass = '';
+    
     if (status === 'office') {
-        todayStatusElement.textContent = '🏢 Днес трябва да съм в офиса';
-        todayStatusElement.className = 'status office';
-    } else if (status === 'remote') {
-        todayStatusElement.textContent = '🏠 Днес работя от вкъщи';
-        todayStatusElement.className = 'status remote';
+        statusText = '🏢 Днес трябва да съм в офиса';
+        statusClass = 'status office';
     } else {
-        todayStatusElement.textContent = '🌅 Уикенд - почивка';
-        todayStatusElement.className = 'status remote';
+        // За дистанционни дни и уикенди показваме само следващия офис ден
+        if (nextOfficeDay) {
+            const nextDay = DAY_NAMES[nextOfficeDay.getDay()];
+            const nextDate = `${nextOfficeDay.getDate()}.${(nextOfficeDay.getMonth() + 1).toString().padStart(2, '0')}`;
+            statusText = `🏢 Следващ офис ден: ${nextDay}, ${nextDate}`;
+            statusClass = 'status remote';
+        } else {
+            statusText = '🏠 Работя от вкъщи';
+            statusClass = 'status remote';
+        }
     }
+    
+    todayStatusElement.textContent = statusText;
+    todayStatusElement.className = statusClass;
 }
 
 // Функция за генериране на календар за месец
