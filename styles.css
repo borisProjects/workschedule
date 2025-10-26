@@ -768,20 +768,6 @@ header h1 {
     }
 }
 
-.current-time {
-    background: var(--bg-card);
-    border-radius: 10px;
-    padding: 0.8rem 1.5rem;
-    display: inline-block;
-    margin-top: 1rem;
-    border: 1px solid var(--border-color);
-}
-
-.current-time span {
-    font-size: clamp(1rem, 2.5vw, 1.2rem);
-    font-weight: 600;
-    color: var(--text-light);
-}
 
 .footer {
     text-align: center;

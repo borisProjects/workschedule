@@ -209,18 +209,6 @@ function getNextOfficeDay(fromDate) {
     return null;
 }
 
-// Функция за показване на текущото време
-function showCurrentTime() {
-    const now = new Date();
-    const timeElement = document.getElementById('currentTime');
-    
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-    
-    timeElement.textContent = `${hours}:${minutes}:${seconds}`;
-}
-
 // Функция за показване на текущата дата и статус
 function showCurrentStatus() {
     const today = new Date();
@@ -533,7 +521,6 @@ let lastRenderedDate = new Date();
 
 function updateDateTime() {
     const now = new Date();
-    showCurrentTime();
     showCurrentStatus();
 
     // Обновявай календара само ако е нов ден
@@ -563,9 +550,8 @@ function scheduleDayUpdate() {
 
 function startAutoUpdate() {
     updateDateTime();
-    setInterval(showCurrentTime, 1000); // часовникът се обновява всяка секунда
-    setInterval(showCurrentStatus, 60000); // статусът се обновява всяка минута
-    scheduleDayUpdate(); // календарът се обновява само при нов ден
+    setInterval(showCurrentStatus, 60000);
+    scheduleDayUpdate();
 
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
