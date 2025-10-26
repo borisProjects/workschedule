@@ -15,13 +15,23 @@
 <body>
     <div class="container">
         <header>
-            <h1>📅 Работен График</h1>
-            <p class="subtitle">Календар с офисни дни</p>
+            <h1>🪰 Productivity Calendar 🪰</h1>
+            <p class="subtitle">Офис календар и QC календар</p>
             <div class="current-time">
                 <span id="currentTime"></span>
             </div>
         </header>
-        <div class="legend">
+        
+        <div class="calendar-switcher">
+            <button id="officeCalendarBtn" class="switch-btn active" data-calendar="office">
+                🏢 Офис дни
+            </button>
+            <button id="qcCalendarBtn" class="switch-btn" data-calendar="qc">
+                📋 QC Calendar
+            </button>
+        </div>
+        
+        <div id="officeLegend" class="legend">
             <div class="legend-item">
                 <div class="legend-color office" aria-hidden="true"></div>
                 <span>В офиса</span>
@@ -35,6 +45,22 @@
                 <span>Уикенд</span>
             </div>
         </div>
+        
+        <div id="qcLegend" class="legend" style="display: none;">
+            <div class="legend-item">
+                <div class="legend-color weekly-qc" aria-hidden="true"></div>
+                <span>Weekly QC</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color monthly-qc" aria-hidden="true"></div>
+                <span>Monthly QC</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color no-qc" aria-hidden="true"></div>
+                <span>Без QC</span>
+            </div>
+        </div>
+        
         <div class="current-info">
             <div class="current-date">
                 <h2>Днес: <span id="currentDate"></span></h2>

@@ -32,6 +32,9 @@ const MONTH_NAMES = [
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 
+// Текущ активен календар
+let activeCalendar = 'office'; // 'office' или 'qc'
+
 // Проверка дали устройството е мобилно
 function isMobile() {
     return window.innerWidth <= 768;
@@ -53,22 +56,31 @@ function isWorkDay(date) {
     return day >= 1 && day <= 5; // Понеделник до петък
 }
 
+// Функция за получаване на понеделника от седмицата на дадена дата
+function getMondayOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Коригираме за неделя
+    return new Date(d.setDate(diff));
+}
+
 // Функция за определяне дали датата е офис ден
 function isOfficeDay(date) {
     if (!isWorkDay(date)) return false;
     
-    const startDate = new Date(WORK_SCHEDULE.startDate);
-    const currentDate = new Date(date);
+    // Намираме понеделника на седмицата за началната дата и текущата дата
+    const startMonday = getMondayOfWeek(WORK_SCHEDULE.startDate);
+    const currentMonday = getMondayOfWeek(date);
     
-    // Изчисляваме колко седмици са минали от началната дата
-    const weeksDiff = Math.floor((currentDate - startDate) / (7 * 24 * 60 * 60 * 1000));
+    // Изчисляваме колко седмици са минали от началната седмица
+    const weeksDiff = Math.round((currentMonday - startMonday) / (7 * 24 * 60 * 60 * 1000));
     
     // Определяме в кой цикъл сме (работи и за отрицателни стойности)
     const totalWeeksInCycle = WORK_SCHEDULE.pattern.reduce((sum, pattern) => sum + pattern.weeks, 0);
     const cyclePosition = ((weeksDiff % totalWeeksInCycle) + totalWeeksInCycle) % totalWeeksInCycle;
     
     // Определяме кой ден от седмицата е
-    const dayOfWeek = currentDate.getDay();
+    const dayOfWeek = date.getDay();
     
     // Проверяваме дали денят е в текущия цикъл
     let weekCount = 0;
@@ -96,8 +108,68 @@ function getStatusDescription(status) {
         case 'office': return 'В офиса';
         case 'remote': return 'От вкъщи';
         case 'weekend': return 'Почивка';
+        case 'weekly-qc': return 'Weekly QC';
+        case 'monthly-qc': return 'Monthly QC';
+        case 'no-qc': return 'Без QC';
         default: return '';
     }
+}
+
+// Функция за намиране на първата пълна седмица Понеделник-Петък
+function getFirstFullWeekRange(year, month) {
+    // Намираме първия понеделник от месеца
+    const firstDayOfMonth = new Date(year, month, 1);
+    let firstMonday = new Date(firstDayOfMonth);
+    
+    // Ако първият ден не е понеделник, намираме следващия понеделник
+    const firstDayWeekday = firstDayOfMonth.getDay();
+    if (firstDayWeekday === 0) {
+        // Ако е неделя, първият понеделник е след 1 ден
+        firstMonday.setDate(firstDayOfMonth.getDate() + 1);
+    } else if (firstDayWeekday > 1) {
+        // Ако е вторник или по-късно, преминаваме към следващия понеделник
+        firstMonday.setDate(firstDayOfMonth.getDate() + (8 - firstDayWeekday));
+    }
+    // Ако е понеделник (1), firstMonday вече е правилен
+    
+    // Първият петък от седмицата е след 4 дни
+    const firstFriday = new Date(firstMonday);
+    firstFriday.setDate(firstMonday.getDate() + 4);
+    
+    return {
+        mondayDate: firstMonday.getDate(),
+        fridayDate: firstFriday.getDate()
+    };
+}
+
+// Функция за определяне на QC статус за дадена дата
+function getQCStatus(date) {
+    const dayOfWeek = date.getDay();
+    const dayOfMonth = date.getDate();
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    
+    // Уикенди - без QC
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return 'no-qc';
+    }
+    
+    // Намираме първата пълна седмица Понеделник-Петък
+    const firstWeek = getFirstFullWeekRange(year, month);
+    
+    // Проверка дали сме в първата пълна седмица (Понеделник-Петък)
+    if (dayOfMonth >= firstWeek.mondayDate && dayOfMonth <= firstWeek.fridayDate) {
+        // Monthly QC за цялата първа седмица
+        return 'monthly-qc';
+    }
+    
+    // Всички други седмици: само Weekly QC в Сряда и Четвъртък
+    if (dayOfWeek === 3 || dayOfWeek === 4) {
+        return 'weekly-qc';
+    }
+    
+    // Останалите дни - без QC
+    return 'no-qc';
 }
 
 // Функция за намиране на последния работен ден в месеца
@@ -157,24 +229,39 @@ function showCurrentStatus() {
     
     currentDateElement.textContent = formatDate(today);
     
-    const status = getDayStatus(today);
-    const nextOfficeDay = getNextOfficeDay(today);
-    
     let statusText = '';
     let statusClass = '';
     
-    if (status === 'office') {
-        statusText = '🏢 Днес трябва да съм в офиса';
-        statusClass = 'status office';
-    } else {
-        // За дистанционни дни и уикенди показваме само следващия офис ден
-        if (nextOfficeDay) {
-            const nextDay = DAY_NAMES[nextOfficeDay.getDay()];
-            const nextDate = `${nextOfficeDay.getDate()}.${(nextOfficeDay.getMonth() + 1).toString().padStart(2, '0')}`;
-            statusText = `🏢 Следващ офис ден: ${nextDay}, ${nextDate}`;
-            statusClass = 'status remote';
+    if (activeCalendar === 'office') {
+        const status = getDayStatus(today);
+        const nextOfficeDay = getNextOfficeDay(today);
+        
+        if (status === 'office') {
+            statusText = '🏢 Днес трябва да съм в офиса';
+            statusClass = 'status office';
         } else {
-            statusText = '🏠 Работя от вкъщи';
+            // За дистанционни дни и уикенди показваме само следващия офис ден
+            if (nextOfficeDay) {
+                const nextDay = DAY_NAMES[nextOfficeDay.getDay()];
+                const nextDate = `${nextOfficeDay.getDate()}.${(nextOfficeDay.getMonth() + 1).toString().padStart(2, '0')}`;
+                statusText = `🏢 Следващ офис ден: ${nextDay}, ${nextDate}`;
+                statusClass = 'status remote';
+            } else {
+                statusText = '🏠 Работя от вкъщи';
+                statusClass = 'status remote';
+            }
+        }
+    } else if (activeCalendar === 'qc') {
+        const qcStatus = getQCStatus(today);
+        
+        if (qcStatus === 'monthly-qc') {
+            statusText = '📋 Днес имаме Monthly QC';
+            statusClass = 'status monthly-qc';
+        } else if (qcStatus === 'weekly-qc') {
+            statusText = '📋 Днес имаме Weekly QC';
+            statusClass = 'status weekly-qc';
+        } else {
+            statusText = '✅ Днес няма QC';
             statusClass = 'status remote';
         }
     }
@@ -206,7 +293,9 @@ function generateCalendar(month, year) {
             
             const isCurrentMonth = currentDate.getMonth() === month;
             const isToday = currentDate.toDateString() === today.toDateString();
-            const status = getDayStatus(currentDate);
+            
+            // Определяме статуса според активния календар
+            const status = activeCalendar === 'office' ? getDayStatus(currentDate) : getQCStatus(currentDate);
             
             weekDays.push({
                 date: new Date(currentDate),
@@ -251,8 +340,8 @@ function showCalendar() {
                 dayElement.setAttribute('aria-current', 'date');
             }
             
-            // Проверка за последен работен ден от месеца
-            const isPayday = day.isCurrentMonth && isLastWorkingDayOfMonth(day.date);
+            // Проверка за последен работен ден от месеца (само за офис календар)
+            const isPayday = activeCalendar === 'office' && day.isCurrentMonth && isLastWorkingDayOfMonth(day.date);
             if (isPayday) {
                 dayElement.classList.add('payday');
             }
@@ -485,6 +574,30 @@ function startAutoUpdate() {
     });
 }
 
+// Функция за превключване между календари
+function switchCalendar(calendarType) {
+    activeCalendar = calendarType;
+    
+    // Обновяваме активния бутон
+    document.querySelectorAll('.switch-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    if (calendarType === 'office') {
+        document.getElementById('officeCalendarBtn').classList.add('active');
+        document.getElementById('officeLegend').style.display = 'flex';
+        document.getElementById('qcLegend').style.display = 'none';
+    } else if (calendarType === 'qc') {
+        document.getElementById('qcCalendarBtn').classList.add('active');
+        document.getElementById('officeLegend').style.display = 'none';
+        document.getElementById('qcLegend').style.display = 'flex';
+    }
+    
+    // Обновяваме статуса и календара
+    showCurrentStatus();
+    showCalendar();
+}
+
 // Инициализация на приложението
 function initApp() {
     showCurrentStatus();
@@ -498,13 +611,14 @@ function initApp() {
     document.getElementById('nextMonth').addEventListener('click', goToNextMonth);
     document.getElementById('goToToday').addEventListener('click', goToToday);
     
+    // Добавяме event listeners за превключване на календари
+    document.getElementById('officeCalendarBtn').addEventListener('click', () => switchCalendar('office'));
+    document.getElementById('qcCalendarBtn').addEventListener('click', () => switchCalendar('qc'));
+    
     // Добавяме клавиатурна навигация
     document.addEventListener('keydown', handleKeyboardNavigation);
     
-    // Добавяме touch events за swipe gestures
-    const calendarContainer = document.querySelector('.calendar-container');
-    calendarContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
-    calendarContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
+    // Swipe жестове са премахнати за да не пречат на zoom и scroll
     
     // Добавяме focus management за по-добра достъпност
     document.getElementById('prevMonth').addEventListener('focus', function() {

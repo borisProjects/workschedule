@@ -9,6 +9,9 @@
     --office-color: #D8C4B6;
     --remote-color: #3E5879;
     --weekend-color: #213555;
+    --weekly-qc-color: #C9A687;
+    --monthly-qc-color: #B85C5C;
+    --no-qc-color: #2a3a4a;
     --bg-dark: #000000;
     --bg-card: #1a1a1a;
     --bg-weekday: #0f0f0f;
@@ -43,7 +46,7 @@ header {
 }
 
 header h1 {
-    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-size: clamp(2rem, 5vw, 3.5rem);
     font-weight: 700;
     margin-bottom: 0.5rem;
     letter-spacing: -0.02em;
@@ -92,6 +95,16 @@ header h1 {
 
 .status.remote {
     background: #3E5879;
+    color: #D3DAD9;
+}
+
+.status.weekly-qc {
+    background: var(--weekly-qc-color);
+    color: #D3DAD9;
+}
+
+.status.monthly-qc {
+    background: var(--monthly-qc-color);
     color: #D3DAD9;
 }
 
@@ -274,6 +287,21 @@ header h1 {
     color: #D3DAD9;
 }
 
+.calendar-day.weekly-qc {
+    background: var(--weekly-qc-color);
+    color: #2a2520;
+}
+
+.calendar-day.monthly-qc {
+    background: var(--monthly-qc-color);
+    color: #D3DAD9;
+}
+
+.calendar-day.no-qc {
+    background: var(--no-qc-color);
+    color: var(--text-muted);
+}
+
 .day-number {
     font-size: clamp(0.9rem, 2.5vw, 1.3rem);
     font-weight: 600;
@@ -337,8 +365,65 @@ header h1 {
     background: #213555;
 }
 
+.legend-color.weekly-qc {
+    background: var(--weekly-qc-color);
+}
+
+.legend-color.monthly-qc {
+    background: var(--monthly-qc-color);
+}
+
+.legend-color.no-qc {
+    background: var(--no-qc-color);
+    border: 1px solid var(--border-color);
+}
+
+/* Calendar Switcher */
+.calendar-switcher {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.switch-btn {
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.9rem 1.8rem;
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.01em;
+}
+
+.switch-btn:hover {
+    background: var(--bg-weekday);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.switch-btn.active {
+    background: var(--primary-color);
+    color: #000000;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(211, 218, 217, 0.3);
+}
+
+.switch-btn:active {
+    transform: translateY(0);
+}
+
 /* Мобилни оптимизации */
 @media (max-width: 768px) {
+    header h1 {
+        font-size: 27px;
+        margin-top:20px
+       
+    }
     .container {
         padding: 0.75rem;
     }
