@@ -1,11 +1,13 @@
 // Конфигурация на работния график
+// 3-седмичен ротационен цикъл
+// Начална дата: 27 октомври 2025 (понеделник) - начало на Седмица 1
 const WORK_SCHEDULE = {
-    startDate: new Date(2025, 10, 3),
+    startDate: new Date(2025, 9, 27), // 27 октомври 2025 (понеделник)
     
     pattern: [
-        { days: [1, 2], weeks: 1 },
-        { days: [3, 4], weeks: 1 },
-        { days: [5], weeks: 1 }
+        { days: [1, 2], weeks: 1 },  // Седмица 1: Понеделник, Вторник (28-29 октомври, 17-18 ноември, и т.н.)
+        { days: [3, 4], weeks: 1 },  // Седмица 2: Сряда, Четвъртък (5-6 ноември, 26-27 ноември, и т.н.)
+        { days: [5], weeks: 1 }      // Седмица 3: Петък (14 ноември, 5 декември, и т.н.)
     ]
 };
 
@@ -30,8 +32,8 @@ const MONTH_NAMES = [
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 
-// Текущ активен календар
-let activeCalendar = 'office'; // 'office' или 'qc'
+// Данни за офис местата
+let officeSeatsData = [];
 
 // Проверка дали устройството е мобилно
 function isMobile() {
@@ -106,69 +108,132 @@ function getStatusDescription(status) {
         case 'office': return 'В офиса';
         case 'remote': return 'От вкъщи';
         case 'weekend': return 'Почивка';
-        case 'weekly-qc': return 'Weekly QC';
-        case 'monthly-qc': return 'Monthly QC';
-        case 'no-qc': return 'Без QC';
         default: return '';
     }
 }
 
-// Функция за намиране на първата пълна седмица Понеделник-Петък
-function getFirstFullWeekRange(year, month) {
-    // Намираме първия понеделник от месеца
-    const firstDayOfMonth = new Date(year, month, 1);
-    let firstMonday = new Date(firstDayOfMonth);
-    
-    // Ако първият ден не е понеделник, намираме следващия понеделник
-    const firstDayWeekday = firstDayOfMonth.getDay();
-    if (firstDayWeekday === 0) {
-        // Ако е неделя, първият понеделник е след 1 ден
-        firstMonday.setDate(firstDayOfMonth.getDate() + 1);
-    } else if (firstDayWeekday > 1) {
-        // Ако е вторник или по-късно, преминаваме към следващия понеделник
-        firstMonday.setDate(firstDayOfMonth.getDate() + (8 - firstDayWeekday));
+// Fallback данни за офис места (ако CSV не може да се зареди)
+const FALLBACK_SEATS_DATA = `348,София Григорова
+347,Дарина Атанасова
+346,Емилия Чакърова
+345,Александър Тодоров
+352,Христина Нинова
+351,Мирослава Алексова
+350,Свободно
+349,Румен Алексов
+356,Гюлджан Ибрям
+355,Румен Иванов
+354,Пламен Пенков
+353,Борис Иванов
+360,Станислава Руйкова
+359,Виктория Йорданова
+358,Христина Хайдарлиева
+357,Татяна Демирева
+364,Свободно
+363,Свободно
+362,Свободно
+361,Свободно
+368,Боян Гечев
+367,Лъчезар Хумбаджиев
+366,Виолета Масларска
+365,Радослав Николов`;
+
+// Функция за зареждане на данни за офис местата от CSV
+async function loadOfficeSeatsData() {
+    try {
+        console.log('🔄 Зареждане на офис места...');
+        const response = await fetch('officeSeats.csv');
+        
+        if (!response.ok) {
+            throw new Error('CSV файлът не може да се зареди');
+        }
+        
+        console.log('📡 Отговор получен:', response.status, response.ok);
+        const text = await response.text();
+        console.log('📄 CSV съдържание (първи 100 символа):', text.substring(0, 100));
+        const lines = text.split('\n');
+        
+        // Пропускаме заглавието
+        officeSeatsData = lines.slice(1)
+            .filter(line => line.trim())
+            .map(line => {
+                const [number, name] = line.split(',');
+                return {
+                    number: number?.trim(),
+                    name: name?.trim() || ''
+                };
+            })
+            .filter(seat => seat.number);
+            
+        // НЕ сортираме - запазваме реда от файла!
+        console.log('✅ Заредени', officeSeatsData.length, 'места от CSV');
+        console.log('📋 Примерни места:', officeSeatsData.slice(0, 3));
+    } catch (error) {
+        console.warn('⚠️ Грешка при зареждане на CSV, използвам fallback данни:', error.message);
+        
+        // Използваме fallback данните
+        const lines = FALLBACK_SEATS_DATA.split('\n');
+        officeSeatsData = lines
+            .filter(line => line.trim())
+            .map(line => {
+                const [number, name] = line.split(',');
+                return {
+                    number: number?.trim(),
+                    name: name?.trim() || ''
+                };
+            })
+            .filter(seat => seat.number);
+            
+        // НЕ сортираме - запазваме реда от данните!
+        console.log('✅ Заредени', officeSeatsData.length, 'места от fallback данни');
     }
-    // Ако е понеделник (1), firstMonday вече е правилен
-    
-    // Първият петък от седмицата е след 4 дни
-    const firstFriday = new Date(firstMonday);
-    firstFriday.setDate(firstMonday.getDate() + 4);
-    
-    return {
-        mondayDate: firstMonday.getDate(),
-        fridayDate: firstFriday.getDate()
-    };
 }
 
-// Функция за определяне на QC статус за дадена дата
-function getQCStatus(date) {
-    const dayOfWeek = date.getDay();
-    const dayOfMonth = date.getDate();
-    const year = date.getFullYear();
-    const month = date.getMonth();
+// Функция за показване на офис местата
+function showOfficeSeats() {
+    console.log('🪑 Показване на офис места...');
+    const grid = document.getElementById('officeSeatsGrid');
     
-    // Уикенди - без QC
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-        return 'no-qc';
+    if (!grid) {
+        console.error('❌ Grid елемент НЕ е намерен!');
+        return;
     }
     
-    // Намираме първата пълна седмица Понеделник-Петък
-    const firstWeek = getFirstFullWeekRange(year, month);
+    console.log('✅ Grid елемент намерен');
+    console.log('📊 Брой места за показване:', officeSeatsData.length);
     
-    // Проверка дали сме в първата пълна седмица (Понеделник-Петък)
-    if (dayOfMonth >= firstWeek.mondayDate && dayOfMonth <= firstWeek.fridayDate) {
-        // Monthly QC за цялата първа седмица
-        return 'monthly-qc';
-    }
+    grid.innerHTML = '';
     
-    // Всички други седмици: само Weekly QC в Сряда и Четвъртък
-    if (dayOfWeek === 3 || dayOfWeek === 4) {
-        return 'weekly-qc';
-    }
+    officeSeatsData.forEach((seat, index) => {
+        const seatElement = document.createElement('div');
+        seatElement.className = 'office-seat';
+        seatElement.setAttribute('data-seat', seat.number);
+        
+        const numberElement = document.createElement('div');
+        numberElement.className = 'seat-number';
+        numberElement.textContent = seat.number;
+        
+        const nameElement = document.createElement('div');
+        if (seat.name) {
+            nameElement.className = 'seat-name';
+            nameElement.textContent = seat.name;
+        } else {
+            nameElement.className = 'seat-empty';
+            nameElement.textContent = 'Свободно';
+        }
+        
+        seatElement.appendChild(numberElement);
+        seatElement.appendChild(nameElement);
+        grid.appendChild(seatElement);
+        
+        if (index === 0) {
+            console.log('✅ Първо място създадено:', seat.number);
+        }
+    });
     
-    // Останалите дни - без QC
-    return 'no-qc';
+    console.log('✅ Всички места показани');
 }
+
 
 // Функция за намиране на последния работен ден в месеца
 function isLastWorkingDayOfMonth(date) {
@@ -210,50 +275,107 @@ function getNextOfficeDay(fromDate) {
 // Функция за показване на текущата дата и статус
 function showCurrentStatus() {
     const today = new Date();
+    const status = getDayStatus(today);
+    const nextOfficeDay = getNextOfficeDay(today);
+    
+    // Обновяваме dashboard
     const currentDateElement = document.getElementById('currentDate');
     const todayStatusElement = document.getElementById('todayStatus');
     
-    currentDateElement.textContent = formatDate(today);
+    if (currentDateElement) {
+        currentDateElement.textContent = formatDate(today);
+    }
     
-    let statusText = '';
-    let statusClass = '';
-    
-    if (activeCalendar === 'office') {
-        const status = getDayStatus(today);
-        const nextOfficeDay = getNextOfficeDay(today);
+    if (todayStatusElement) {
+        let statusText = '';
+        let statusClass = 'status-preview';
         
         if (status === 'office') {
             statusText = '🏢 Днес трябва да съм в офиса';
-            statusClass = 'status office';
+            statusClass += ' office';
+        } else if (status === 'weekend') {
+            statusText = '🏖️ Почивка';
+            statusClass += ' weekend';
         } else {
             if (nextOfficeDay) {
                 const nextDay = DAY_NAMES[nextOfficeDay.getDay()];
                 const nextDate = `${nextOfficeDay.getDate()}.${(nextOfficeDay.getMonth() + 1).toString().padStart(2, '0')}`;
-                todayStatusElement.innerHTML = `🏢 Следващ офис ден: <strong>${nextDay}, ${nextDate}</strong>`;
-                todayStatusElement.className = 'status remote';
+                statusText = `Следващ офис ден: ${nextDay}, ${nextDate}`;
+                statusClass += ' remote';
+            } else {
+                statusText = '🏠 Работя от вкъщи';
+                statusClass += ' remote';
+            }
+        }
+        
+        todayStatusElement.textContent = statusText;
+        todayStatusElement.className = statusClass;
+    }
+    
+    // Обновяваме модала
+    const modalCurrentDate = document.getElementById('modalCurrentDate');
+    const modalTodayStatus = document.getElementById('modalTodayStatus');
+    
+    if (modalCurrentDate) {
+        modalCurrentDate.textContent = formatDate(today);
+    }
+    
+    if (modalTodayStatus) {
+        let statusText = '';
+        let statusClass = 'status';
+        
+        if (status === 'office') {
+            statusText = '🏢 Днес трябва да съм в офиса';
+            statusClass += ' office';
+        } else {
+            if (nextOfficeDay) {
+                const nextDay = DAY_NAMES[nextOfficeDay.getDay()];
+                const nextDate = `${nextOfficeDay.getDate()}.${(nextOfficeDay.getMonth() + 1).toString().padStart(2, '0')}`;
+                modalTodayStatus.innerHTML = `🏢 Следващ офис ден: <strong>${nextDay}, ${nextDate}</strong>`;
+                modalTodayStatus.className = 'status remote';
                 return;
             } else {
                 statusText = '🏠 Работя от вкъщи';
-                statusClass = 'status remote';
+                statusClass += ' remote';
             }
         }
-    } else if (activeCalendar === 'qc') {
-        const qcStatus = getQCStatus(today);
         
-        if (qcStatus === 'monthly-qc') {
-            statusText = '📋 Днес имаме Monthly QC';
-            statusClass = 'status monthly-qc';
-        } else if (qcStatus === 'weekly-qc') {
-            statusText = '📋 Днес имаме Weekly QC';
-            statusClass = 'status weekly-qc';
-        } else {
-            statusText = '✅ Днес няма QC';
-            statusClass = 'status remote';
-        }
+        modalTodayStatus.textContent = statusText;
+        modalTodayStatus.className = statusClass;
     }
+}
+
+// Функция за показване на mini calendar в dashboard
+function showMiniCalendar() {
+    const miniCalendar = document.getElementById('miniCalendar');
+    if (!miniCalendar) return;
     
-    todayStatusElement.textContent = statusText;
-    todayStatusElement.className = statusClass;
+    const today = new Date();
+    const month = today.getMonth();
+    const year = today.getFullYear();
+    
+    // Генерираме само следващите 2 седмици
+    miniCalendar.innerHTML = '';
+    
+    for (let i = 0; i < 14; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        
+        const dayElement = document.createElement('div');
+        dayElement.className = 'mini-day';
+        
+        const status = getDayStatus(date);
+        dayElement.classList.add(status);
+        
+        if (i === 0) {
+            dayElement.classList.add('today');
+        }
+        
+        dayElement.textContent = date.getDate();
+        dayElement.title = `${date.getDate()} ${MONTH_NAMES[date.getMonth()]} - ${getStatusDescription(status)}`;
+        
+        miniCalendar.appendChild(dayElement);
+    }
 }
 
 // Функция за генериране на календар за месец
@@ -280,8 +402,8 @@ function generateCalendar(month, year) {
             const isCurrentMonth = currentDate.getMonth() === month;
             const isToday = currentDate.toDateString() === today.toDateString();
             
-            // Определяме статуса според активния календар
-            const status = activeCalendar === 'office' ? getDayStatus(currentDate) : getQCStatus(currentDate);
+            // Определяме статуса
+            const status = getDayStatus(currentDate);
             
             weekDays.push({
                 date: new Date(currentDate),
@@ -326,8 +448,8 @@ function showCalendar() {
                 dayElement.setAttribute('aria-current', 'date');
             }
             
-            // Проверка за последен работен ден от месеца (само за офис календар)
-            const isPayday = activeCalendar === 'office' && day.isCurrentMonth && isLastWorkingDayOfMonth(day.date);
+            // Проверка за последен работен ден от месеца
+            const isPayday = day.isCurrentMonth && isLastWorkingDayOfMonth(day.date);
             if (isPayday) {
                 dayElement.classList.add('payday');
             }
@@ -477,6 +599,24 @@ function handleSwipe() {
     }
 }
 
+// Modal swipe gestures
+let modalTouchStartY = 0;
+let modalTouchEndY = 0;
+
+function handleModalSwipe(event, closeFunction) {
+    if (event.type === 'touchstart') {
+        modalTouchStartY = event.touches[0].clientY;
+    } else if (event.type === 'touchend') {
+        modalTouchEndY = event.changedTouches[0].clientY;
+        const diffY = modalTouchEndY - modalTouchStartY;
+        
+        // Swipe down за затваряне (поне 100px)
+        if (diffY > 100) {
+            closeFunction();
+        }
+    }
+}
+
 // Функция за подобрена мобилна навигация
 function enhanceMobileNavigation() {
     if (isMobile()) {
@@ -520,6 +660,7 @@ let lastRenderedDate = new Date();
 function updateDateTime() {
     const now = new Date();
     showCurrentStatus();
+    showMiniCalendar();
 
     // Обновявай календара само ако е нов ден
     if (
@@ -558,67 +699,184 @@ function startAutoUpdate() {
     });
 }
 
-// Функция за превключване между календари
-function switchCalendar(calendarType) {
-    activeCalendar = calendarType;
-    
-    // Обновяваме активния бутон
-    document.querySelectorAll('.switch-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    if (calendarType === 'office') {
-        document.getElementById('officeCalendarBtn').classList.add('active');
-        document.getElementById('officeLegend').style.display = 'flex';
-        document.getElementById('qcLegend').style.display = 'none';
-    } else if (calendarType === 'qc') {
-        document.getElementById('qcCalendarBtn').classList.add('active');
-        document.getElementById('officeLegend').style.display = 'none';
-        document.getElementById('qcLegend').style.display = 'flex';
+// Функция за отваряне на calendar modal
+function openCalendarModal() {
+    const modal = document.getElementById('calendarModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        showCalendar();
+        showCurrentStatus();
+        
+        // Haptic feedback за мобилни
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
     }
-    
-    // Обновяваме статуса и календара
-    showCurrentStatus();
-    showCalendar();
+}
+
+// Функция за затваряне на calendar modal
+function closeCalendarModal() {
+    const modal = document.getElementById('calendarModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        
+        // Haptic feedback за мобилни
+        if (navigator.vibrate) {
+            navigator.vibrate(30);
+        }
+    }
+}
+
+// Функция за отваряне на seats modal
+function openSeatsModal() {
+    const modal = document.getElementById('seatsModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        showOfficeSeats();
+        
+        // Haptic feedback за мобилни
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+    }
+}
+
+// Функция за затваряне на seats modal
+function closeSeatsModal() {
+    const modal = document.getElementById('seatsModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        
+        // Haptic feedback за мобилни
+        if (navigator.vibrate) {
+            navigator.vibrate(30);
+        }
+    }
+}
+
+// Функция за обновяване на seats count в dashboard
+function updateSeatsCount() {
+    const seatsCountElement = document.getElementById('seatsCount');
+    if (seatsCountElement) {
+        seatsCountElement.textContent = officeSeatsData.length;
+    }
 }
 
 // Инициализация на приложението
-function initApp() {
+async function initApp() {
+    console.log('🚀 Стартиране на приложението...');
+    
+    // Зареждаме офис местата
+    await loadOfficeSeatsData();
+    
+    // Показваме dashboard съдържание
     showCurrentStatus();
-    showCalendar();
+    showMiniCalendar();
+    updateSeatsCount();
     
     // Стартираме автоматичното обновяване
     startAutoUpdate();
     
-    // Добавяме event listeners за навигацията
-    document.getElementById('prevMonth').addEventListener('click', goToPreviousMonth);
-    document.getElementById('nextMonth').addEventListener('click', goToNextMonth);
-    document.getElementById('goToToday').addEventListener('click', goToToday);
+    // Dashboard Cards - Event Listeners
+    const calendarCard = document.getElementById('calendarCard');
+    const seatsCard = document.getElementById('seatsCard');
     
-    // Добавяме event listeners за превключване на календари
-    document.getElementById('officeCalendarBtn').addEventListener('click', () => switchCalendar('office'));
-    document.getElementById('qcCalendarBtn').addEventListener('click', () => switchCalendar('qc'));
+    if (calendarCard) {
+        calendarCard.addEventListener('click', openCalendarModal);
+        console.log('✅ Calendar card listener добавен');
+    }
     
-    // Добавяме клавиатурна навигация
+    if (seatsCard) {
+        seatsCard.addEventListener('click', openSeatsModal);
+        console.log('✅ Seats card listener добавен');
+    }
+    
+    // Modal Close Buttons
+    const closeCalendarBtn = document.getElementById('closeCalendarModal');
+    const closeSeatsBtn = document.getElementById('closeSeatsModal');
+    
+    if (closeCalendarBtn) {
+        closeCalendarBtn.addEventListener('click', closeCalendarModal);
+    }
+    
+    if (closeSeatsBtn) {
+        closeSeatsBtn.addEventListener('click', closeSeatsModal);
+    }
+    
+    // Затваряне на модал при клик извън съдържанието
+    const calendarModal = document.getElementById('calendarModal');
+    const seatsModal = document.getElementById('seatsModal');
+    
+    if (calendarModal) {
+        calendarModal.addEventListener('click', (e) => {
+            if (e.target === calendarModal) {
+                closeCalendarModal();
+            }
+        });
+        
+        // Swipe down gesture за затваряне на мобилни
+        if (isMobile()) {
+            const calendarModalContent = calendarModal.querySelector('.modal-content');
+            if (calendarModalContent) {
+                calendarModalContent.addEventListener('touchstart', (e) => handleModalSwipe(e, closeCalendarModal));
+                calendarModalContent.addEventListener('touchend', (e) => handleModalSwipe(e, closeCalendarModal));
+            }
+        }
+    }
+    
+    if (seatsModal) {
+        seatsModal.addEventListener('click', (e) => {
+            if (e.target === seatsModal) {
+                closeSeatsModal();
+            }
+        });
+        
+        // Swipe down gesture за затваряне на мобилни
+        if (isMobile()) {
+            const seatsModalContent = seatsModal.querySelector('.modal-content');
+            if (seatsModalContent) {
+                seatsModalContent.addEventListener('touchstart', (e) => handleModalSwipe(e, closeSeatsModal));
+                seatsModalContent.addEventListener('touchend', (e) => handleModalSwipe(e, closeSeatsModal));
+            }
+        }
+    }
+    
+    // Затваряне на модал с ESC клавиш
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeCalendarModal();
+            closeSeatsModal();
+        }
+    });
+    
+    // Добавяме event listeners за навигацията в календара
+    const prevMonthBtn = document.getElementById('prevMonth');
+    const nextMonthBtn = document.getElementById('nextMonth');
+    const goTodayBtn = document.getElementById('goToToday');
+    
+    if (prevMonthBtn) {
+        prevMonthBtn.addEventListener('click', goToPreviousMonth);
+    }
+    
+    if (nextMonthBtn) {
+        nextMonthBtn.addEventListener('click', goToNextMonth);
+    }
+    
+    if (goTodayBtn) {
+        goTodayBtn.addEventListener('click', goToToday);
+    }
+    
+    // Добавяме клавиатурна навигация за календара
     document.addEventListener('keydown', handleKeyboardNavigation);
-    
-    // Swipe жестове са премахнати за да не пречат на zoom и scroll
-    
-    // Добавяме focus management за по-добра достъпност
-    document.getElementById('prevMonth').addEventListener('focus', function() {
-        this.setAttribute('aria-expanded', 'true');
-    });
-    
-    document.getElementById('nextMonth').addEventListener('focus', function() {
-        this.setAttribute('aria-expanded', 'true');
-    });
-    
-    document.getElementById('goToToday').addEventListener('focus', function() {
-        this.setAttribute('aria-expanded', 'true');
-    });
     
     // Добавяме подобрена мобилна навигация
     enhanceMobileNavigation();
+    
+    console.log('✅ Приложението е готово!');
 }
 
 // Стартираме приложението когато страницата се зареди
