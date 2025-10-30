@@ -23,6 +23,13 @@ function BottomNav({ currentPage, setCurrentPage }) {
                     <i className="fas fa-chair"></i>
                     <span>Seats</span>
                 </div>
+                <div 
+                    className={`bottom-nav-item ${currentPage === 'events' ? 'active' : ''}`} 
+                    onClick={() => setCurrentPage('events')}
+                >
+                    <i className="fas fa-calendar-check"></i>
+                    <span>Events</span>
+                </div>
             </div>
         </div>
     );
