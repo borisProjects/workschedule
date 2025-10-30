@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0f1e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Productivity Dashboard</title>
+    
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0f1e;
+            --secondary-bg: #1a2332;
+            --card-bg: #1e2936;
+            --sidebar-bg: #0d1117;
+            --accent-cyan: #00d4ff;
+            --accent-teal: #00c9a7;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --border-color: #2d3748;
+            --office-color: #D8C4B6;
+            --remote-color: #3E5879;
+            --weekend-color: #213555;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            max-width: 100vw;
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
+        /* Better touch targets for mobile */
+        button, a, .nav-item, .calendar-day, .office-seat, .card {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        /* Prevent text selection on interactive elements */
+        .nav-item, button, .icon-btn {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        /* Optimize for mobile performance */
+        .calendar-day, .office-seat, .card, .nav-item {
+            will-change: transform;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
+        /* Bottom Navigation for Mobile */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--sidebar-bg);
+            border-top: 2px solid var(--border-color);
+            padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom));
+            z-index: 9999;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+        }
+        
+        .bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            flex: 1;
+            max-width: 100px;
+            position: relative;
+        }
+        
+        .bottom-nav-item i {
+            font-size: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .bottom-nav-item span {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        
+        .bottom-nav-item.active {
+            color: var(--accent-cyan);
+        }
+        
+        .bottom-nav-item.active i {
+            transform: translateY(-2px);
+        }
+        
+        .bottom-nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 3px;
+            background: var(--accent-cyan);
+            border-radius: 0 0 3px 3px;
+        }
+        
+        .bottom-nav-item:active {
+            transform: scale(0.95);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-teal));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .user-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .user-info p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1.5rem 0;
+        }
+
+        .nav-item {
+            padding: 0.9rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-left-color: var(--accent-cyan);
+        }
+
+        .nav-item.active {
+            background: var(--card-bg);
+            color: var(--accent-cyan);
+            border-left-color: var(--accent-cyan);
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+            width: 24px;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .contact-btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-teal));
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .content-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .search-input {
+            padding: 0.75rem 1.25rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: white;
+            width: 300px;
+        }
+
+        .icon-btn {
+            width: 42px;
+            height: 42px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        /* Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-cyan);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .card-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        /* Status Info */
+        .status-info {
+            background: var(--secondary-bg);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-badge.office { background: var(--office-color); color: #37353E; }
+        .status-badge.remote { background: var(--remote-color); }
+        .status-badge.weekend { background: var(--weekend-color); }
+
+        /* Calendar */
+        .calendar-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .calendar-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            width: 42px;
+            height: 42px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+        }
+
+        .today-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-cyan);
+            color: var(--primary-bg);
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.4rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .weekday {
+            text-align: center;
+            padding: 0.5rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            padding: 0.4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 6px;
+            background: var(--secondary-bg);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            min-height: 70px;
+            max-height: 85px;
+        }
+
+        .calendar-day:hover {
+            transform: translateY(-2px);
+        }
+
+        .calendar-day.other-month { opacity: 0.3; }
+        .calendar-day.today { border-color: var(--accent-cyan); font-weight: bold; }
+        .calendar-day.office { background: var(--office-color); color: #37353E; }
+        .calendar-day.remote { background: var(--remote-color); }
+        .calendar-day.weekend { background: var(--weekend-color); }
+
+        .day-number {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.15rem;
+        }
+
+        .day-status {
+            font-size: 0.6rem;
+            opacity: 0.9;
+            line-height: 1.1;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            padding: 0.75rem;
+            background: var(--secondary-bg);
+            border-radius: var(--border-radius);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.office { background: var(--office-color); }
+        .legend-color.remote { background: var(--remote-color); }
+        .legend-color.weekend { background: var(--weekend-color); }
+
+        /* Seats Grid */
+        .office-seats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .office-seats-group {
+            margin-bottom: 3rem;
+        }
+        
+        .office-seats-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .office-seats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .office-seat {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+            border: 2px solid var(--accent-cyan);
+            border-radius: var(--border-radius);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 140px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.15);
+        }
+
+        .office-seat:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.3);
+            border-color: var(--accent-teal);
+        }
+
+        .seat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .seat-name {
+            font-size: 0.9rem;
+            color: white;
+            text-align: center;
+        }
+
+        .seat-empty {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+        }
+        
+        .office-seat:has(.seat-empty) {
+            background: linear-gradient(135deg, #0f1f2f 0%, #1a2a3f 100%);
+            border-color: rgba(0, 212, 255, 0.3);
+            opacity: 0.7;
+        }
+        
+        .office-seat:has(.seat-empty):hover {
+            opacity: 0.85;
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        /* Responsive Design - Professional Grade */
+        
+        /* Desktop (1200px+) - основна конфигурация */
+        @media (min-width: 1200px) {
+            .office-seats-grid {
+                grid-template-columns: repeat(6, 1fr) !important;
+            }
+            
+            .office-seats-container {
+                max-width: 1200px;
+            }
+        }
+        
+        /* Large Desktop (1920px+) */
+        @media (min-width: 1920px) {
+            .main-content {
+                max-width: 1600px;
+                margin-left: auto;
+                margin-right: auto;
+                padding: 3rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+            }
+            
+            .office-seats-grid {
+                grid-template-columns: repeat(6, 1fr) !important;
+            }
+            
+            .office-seats-container {
+                max-width: 1300px;
+            }
+            
+            .calendar-container {
+                max-width: 1100px;
+            }
+        }
+        
+        /* Tablet Landscape (900px - 1199px) */
+        @media (min-width: 900px) and (max-width: 1199px) {
+            .sidebar {
+                width: 240px;
+            }
+            
+            .main-content {
+                margin-left: 240px;
+                padding: 1.5rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .calendar-grid {
+                gap: 0.35rem;
+            }
+            
+            .office-seats-grid {
+                grid-template-columns: repeat(4, 1fr) !important;
+            }
+            
+            .office-seats-container {
+                max-width: 800px;
+            }
+        }
+        
+        /* Tablet Portrait (768px - 899px) */
+        @media (min-width: 768px) and (max-width: 899px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            .nav-item span {
+                display: none;
+            }
+            
+            .nav-item {
+                justify-content: center;
+                padding: 1rem;
+            }
+            
+            .contact-btn {
+                font-size: 0;
+                padding: 0.9rem;
+            }
+            
+            .contact-btn::before {
+                content: '✉';
+                font-size: 1.2rem;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+                padding: 1.5rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .content-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .search-bar {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .search-input {
+                flex: 1;
+                max-width: 100%;
+            }
+            
+            .calendar-grid {
+                gap: 0.3rem;
+            }
+            
+            .calendar-day {
+                min-height: 65px;
+                max-height: 75px;
+                padding: 0.3rem;
+            }
+            
+            .office-seats-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 0.75rem;
+            }
+            
+            .office-seat {
+                min-height: 120px;
+                padding: 1.25rem 0.75rem;
+            }
+        }
+        
+        /* Mobile-Specific Enhancements (< 900px) */
+        @media (max-width: 899px) {
+            /* Compact calendar for mobile - fits on screen */
+            .calendar-container {
+                padding: 0.75rem !important;
+            }
+            
+            .calendar-header {
+                margin-bottom: 0.75rem !important;
+                gap: 0.5rem !important;
+            }
+            
+            .calendar-header h2 {
+                font-size: 1.1rem !important;
+            }
+            
+            .calendar-day {
+                min-height: 50px !important;
+                max-height: 60px !important;
+                padding: 0.3rem 0.2rem !important;
+            }
+            
+            .day-number {
+                font-size: 0.95rem !important;
+                font-weight: 700 !important;
+                margin-bottom: 0.15rem !important;
+            }
+            
+            .day-status {
+                font-size: 0.55rem !important;
+                font-weight: 500 !important;
+            }
+            
+            .weekday {
+                font-size: 0.7rem !important;
+                padding: 0.4rem 0.2rem !important;
+                font-weight: 700 !important;
+            }
+            
+            .calendar-grid {
+                gap: 0.25rem !important;
+            }
+            
+            /* Compact seats grid on mobile */
+            .office-seats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.5rem !important;
+            }
+            
+            .office-seat {
+                min-height: 95px !important;
+                padding: 1rem 0.75rem !important;
+            }
+            
+            .seat-number {
+                font-size: 1.6rem !important;
+                font-weight: 800 !important;
+                margin-bottom: 0.4rem !important;
+            }
+            
+            .seat-name {
+                font-size: 0.8rem !important;
+                font-weight: 600 !important;
+                line-height: 1.3 !important;
+            }
+            
+            /* Better card spacing */
+            .card {
+                padding: 1.25rem !important;
+            }
+            
+            .card-title {
+                font-size: 1.15rem !important;
+            }
+            
+            /* Compact status info */
+            .status-info {
+                padding: 1rem !important;
+                margin-bottom: 1rem !important;
+            }
+            
+            .status-info h3 {
+                font-size: 0.95rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            
+            .status-badge {
+                padding: 0.5rem 1rem !important;
+                font-size: 0.85rem !important;
+                font-weight: 700 !important;
+            }
+            
+            /* Better content header on mobile */
+            .content-header {
+                margin-bottom: 1rem !important;
+            }
+            
+            .content-header h1 {
+                font-size: 1.5rem !important;
+            }
+            
+            /* Touch targets for buttons */
+            .today-btn {
+                padding: 0.6rem 1.2rem !important;
+                font-size: 0.85rem !important;
+                font-weight: 700 !important;
+            }
+            
+            .nav-btn {
+                width: 42px !important;
+                height: 42px !important;
+                font-size: 1.1rem !important;
+            }
+            
+            /* Compact legend on mobile */
+            .legend {
+                gap: 0.75rem !important;
+                padding: 0.6rem !important;
+                margin: 0.75rem 0 !important;
+                flex-wrap: wrap !important;
+            }
+            
+            .legend-item {
+                font-size: 0.75rem !important;
+                font-weight: 600 !important;
+            }
+            
+            .legend-color {
+                width: 18px !important;
+                height: 18px !important;
+            }
+            
+            /* Make main content more compact */
+            .main-content {
+                padding: 0.75rem !important;
+            }
+        }
+        
+        /* Mobile Landscape (600px - 767px) */
+        @media (min-width: 600px) and (max-width: 767px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar-header,
+            .sidebar-footer {
+                padding: 1rem 0.5rem;
+            }
+            
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            .nav-item {
+                padding: 0.9rem;
+                justify-content: center;
+            }
+            
+            .nav-item span {
+                display: none;
+            }
+            
+            .contact-btn {
+                font-size: 0;
+                padding: 0.75rem;
+            }
+            
+            .contact-btn::before {
+                content: '✉';
+                font-size: 1rem;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+                padding: 1rem;
+            }
+            
+            .content-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .content-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .card {
+                padding: 1.25rem;
+            }
+            
+            .status-info {
+                padding: 1.25rem;
+            }
+            
+            .calendar-container {
+                padding: 1.25rem;
+            }
+            
+            .calendar-header h2 {
+                font-size: 1.25rem;
+            }
+            
+            .calendar-grid {
+                gap: 0.25rem;
+            }
+            
+            .calendar-day {
+                min-height: 55px;
+                max-height: 65px;
+                padding: 0.25rem;
+            }
+            
+            .day-number {
+                font-size: 0.85rem;
+            }
+            
+            .day-status {
+                font-size: 0.55rem;
+            }
+            
+            .weekday {
+                font-size: 0.7rem;
+                padding: 0.4rem;
+            }
+            
+            .legend {
+                gap: 1rem;
+                padding: 0.6rem;
+                flex-wrap: wrap;
+            }
+            
+            .office-seats-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.6rem;
+            }
+            
+            .office-seat {
+                min-height: 110px;
+                padding: 1rem 0.6rem;
+            }
+            
+            .seat-number {
+                font-size: 1.6rem;
+            }
+            
+            .seat-name {
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Mobile Portrait (480px - 599px) */
+        @media (min-width: 480px) and (max-width: 599px) {
+            .sidebar {
+                width: 60px;
+            }
+            
+            .sidebar-header,
+            .sidebar-footer {
+                padding: 0.75rem 0.25rem;
+            }
+            
+            .user-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            .nav-item {
+                padding: 0.75rem;
+                justify-content: center;
+            }
+            
+            .nav-item span {
+                display: none;
+            }
+            
+            .nav-item i {
+                font-size: 1rem;
+            }
+            
+            .contact-btn {
+                font-size: 0;
+                padding: 0.65rem;
+            }
+            
+            .contact-btn::before {
+                content: '✉';
+                font-size: 0.9rem;
+            }
+            
+            .main-content {
+                margin-left: 60px;
+                padding: 0.75rem;
+            }
+            
+            .content-header h1 {
+                font-size: 1.35rem;
+            }
+            
+            .content-header {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .search-bar {
+                flex-direction: row;
+                width: 100%;
+            }
+            
+            .search-input {
+                flex: 1;
+                font-size: 0.85rem;
+                padding: 0.65rem 1rem;
+            }
+            
+            .icon-btn {
+                width: 38px;
+                height: 38px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .card-title {
+                font-size: 1rem;
+            }
+            
+            .status-info {
+                padding: 1rem;
+            }
+            
+            .status-info h3 {
+                font-size: 0.95rem;
+            }
+            
+            .status-badge {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .calendar-container {
+                padding: 1rem;
+            }
+            
+            .calendar-header {
+                flex-direction: column;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+            
+            .calendar-header h2 {
+                font-size: 1.15rem;
+            }
+            
+            .nav-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            
+            .today-btn {
+                padding: 0.6rem 1.25rem;
+                font-size: 0.85rem;
+            }
+            
+            .calendar-grid {
+                gap: 0.2rem;
+            }
+            
+            .calendar-day {
+                min-height: 50px;
+                max-height: 60px;
+                padding: 0.2rem;
+            }
+            
+            .day-number {
+                font-size: 0.8rem;
+                margin-bottom: 0.1rem;
+            }
+            
+            .day-status {
+                font-size: 0.5rem;
+            }
+            
+            .weekday {
+                font-size: 0.65rem;
+                padding: 0.35rem;
+            }
+            
+            .legend {
+                gap: 0.75rem;
+                padding: 0.5rem;
+                flex-wrap: wrap;
+                font-size: 0.8rem;
+            }
+            
+            .legend-color {
+                width: 16px;
+                height: 16px;
+            }
+            
+            .office-seats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            
+            .office-seat {
+                min-height: 100px;
+                padding: 0.85rem 0.5rem;
+            }
+            
+            .seat-number {
+                font-size: 1.4rem;
+            }
+            
+            .seat-name {
+                font-size: 0.7rem;
+            }
+        }
+        
+        /* Mobile Navigation Switch (Below 900px) */
+        @media (max-width: 899px) {
+            .sidebar {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important;
+            }
+            
+            .bottom-nav {
+                display: block !important;
+            }
+        }
+        
+        /* Small Mobile (320px - 479px) */
+        @media (max-width: 479px) {
+            .sidebar {
+                width: 50px;
+            }
+            
+            .sidebar-header,
+            .sidebar-footer {
+                padding: 0.5rem 0.15rem;
+            }
+            
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            .nav-item {
+                padding: 0.65rem 0.25rem;
+                justify-content: center;
+            }
+            
+            .nav-item span {
+                display: none;
+            }
+            
+            .nav-item i {
+                font-size: 0.9rem;
+                width: 20px;
+            }
+            
+            .contact-btn {
+                font-size: 0;
+                padding: 0.55rem;
+            }
+            
+            .contact-btn::before {
+                content: '✉';
+                font-size: 0.8rem;
+            }
+            
+            .main-content {
+                margin-left: 50px;
+                padding: 0.5rem;
+            }
+            
+            .content-header h1 {
+                font-size: 1.25rem;
+            }
+            
+            .content-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .search-bar {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.5rem;
+            }
+            
+            .search-input {
+                width: 100%;
+                font-size: 0.8rem;
+                padding: 0.6rem 0.9rem;
+            }
+            
+            .icon-btn {
+                width: 36px;
+                height: 36px;
+                align-self: flex-end;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 0.6rem;
+            }
+            
+            .card {
+                padding: 0.9rem;
+                border-radius: 10px;
+            }
+            
+            .card-header {
+                margin-bottom: 0.75rem;
+            }
+            
+            .card-title {
+                font-size: 1rem;
+            }
+            
+            .card-link {
+                font-size: 0.75rem;
+            }
+            
+            .status-info {
+                padding: 0.75rem;
+            }
+            
+            .status-info h3 {
+                font-size: 0.9rem;
+                margin-bottom: 0.4rem;
+            }
+            
+            .status-badge {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .calendar-container {
+                padding: 0.6rem;
+                border-radius: 10px;
+            }
+            
+            .calendar-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 0.6rem;
+            }
+            
+            .calendar-header h2 {
+                font-size: 0.95rem;
+                text-align: center;
+            }
+            
+            .calendar-controls {
+                gap: 0.4rem;
+                justify-content: center;
+            }
+            
+            .nav-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+            
+            .today-btn {
+                padding: 0.55rem 1.1rem;
+                font-size: 0.8rem;
+            }
+            
+            .calendar-grid {
+                gap: 0.2rem;
+            }
+            
+            .calendar-day {
+                min-height: 42px;
+                max-height: 50px;
+                padding: 0.2rem 0.1rem;
+                border-radius: 4px;
+            }
+            
+            .day-number {
+                font-size: 0.8rem;
+                margin-bottom: 0.1rem;
+            }
+            
+            .day-status {
+                font-size: 0.5rem;
+            }
+            
+            .weekday {
+                font-size: 0.65rem;
+                padding: 0.35rem 0.1rem;
+            }
+            
+            .legend {
+                gap: 0.6rem;
+                padding: 0.5rem;
+                flex-wrap: wrap;
+                font-size: 0.7rem;
+                margin: 0.6rem 0;
+            }
+            
+            .legend-item {
+                font-size: 0.7rem;
+            }
+            
+            .legend-color {
+                width: 15px;
+                height: 15px;
+            }
+            
+            .office-seats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.45rem;
+            }
+            
+            .office-seat {
+                min-height: 85px;
+                padding: 0.75rem 0.5rem;
+                border-radius: 8px;
+            }
+            
+            .seat-number {
+                font-size: 1.3rem;
+                margin-bottom: 0.3rem;
+            }
+            
+            .seat-name {
+                font-size: 0.7rem;
+                line-height: 1.25;
+            }
+            
+            .seat-empty {
+                font-size: 0.65rem;
+            }
+        }
+        
+        /* Extra Small Mobile (max 360px) */
+        @media (max-width: 360px) {
+            .main-content {
+                padding: 0.4rem;
+            }
+            
+            .content-header h1 {
+                font-size: 1.15rem;
+            }
+            
+            .content-header {
+                margin-bottom: 0.6rem;
+            }
+            
+            .status-info {
+                padding: 0.65rem;
+            }
+            
+            .status-info h3 {
+                font-size: 0.85rem;
+            }
+            
+            .calendar-container {
+                padding: 0.5rem;
+            }
+            
+            .calendar-header h2 {
+                font-size: 0.9rem;
+            }
+            
+            .calendar-day {
+                min-height: 38px;
+                max-height: 46px;
+            }
+            
+            .day-number {
+                font-size: 0.75rem;
+            }
+            
+            .day-status {
+                font-size: 0.48rem;
+            }
+            
+            .weekday {
+                font-size: 0.6rem;
+                padding: 0.3rem 0.1rem;
+            }
+            
+            .calendar-grid {
+                gap: 0.15rem;
+            }
+            
+            .legend {
+                gap: 0.5rem;
+                padding: 0.4rem;
+                margin: 0.5rem 0;
+            }
+            
+            .legend-item {
+                font-size: 0.65rem;
+            }
+            
+            .legend-color {
+                width: 14px;
+                height: 14px;
+            }
+            
+            .office-seat {
+                min-height: 80px;
+                padding: 0.65rem 0.4rem;
+            }
+            
+            .seat-number {
+                font-size: 1.2rem;
+            }
+            
+            .seat-name {
+                font-size: 0.65rem;
+            }
+            
+            .today-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
+            
+            .nav-btn {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Configuration
+        const WORK_SCHEDULE = {
+            startDate: new Date(2025, 10, 3),
+            pattern: [
+                { days: [1, 2], weeks: 1 },
+                { days: [3, 4], weeks: 1 },
+                { days: [5], weeks: 1 }
+            ]
+        };
+
+        const DAY_NAMES = ['Неделя', 'Понеделник', 'Вторник', 'Сряда', 'Четвъртък', 'Петък', 'Събота'];
+        const MONTH_NAMES = ['януари', 'февруари', 'март', 'април', 'май', 'юни', 'юли', 'август', 'септември', 'октомври', 'ноември', 'декември'];
+
+        const OFFICE_SEATS = [
+            // Първа група (бюра 1)
+            { number: '348', name: 'София Григорова', group: 1 },
+            { number: '347', name: 'Дарина Атанасова', group: 1 },
+            { number: '346', name: 'Емилия Чакърова', group: 1 },
+            { number: '345', name: 'Александър Тодоров', group: 1 },
+            { number: '352', name: 'Христина Нинова', group: 1 },
+            { number: '351', name: 'Мирослава Алексова', group: 1 },
+            { number: '350', name: 'Свободно', group: 1 },
+            { number: '349', name: 'Румен Алексов', group: 1 },
+            
+            // Втора група (бюра 2)
+            { number: '356', name: 'Гюлджан Ибрям', group: 2 },
+            { number: '355', name: 'Румен Иванов', group: 2 },
+            { number: '354', name: 'Пламен Пенков', group: 2 },
+            { number: '353', name: 'Борис Иванов', group: 2 },
+            { number: '360', name: 'Станислава Руйкова', group: 2 },
+            { number: '359', name: 'Виктория Йорданова', group: 2 },
+            { number: '358', name: 'Христина Хайдарлиева', group: 2 },
+            { number: '357', name: 'Татяна Демирева', group: 2 },
+            
+            // Трета група (бюра 3)
+            { number: '364', name: 'Свободно', group: 3 },
+            { number: '363', name: 'Свободно', group: 3 },
+            { number: '362', name: 'Свободно', group: 3 },
+            { number: '361', name: 'Свободно', group: 3 },
+            { number: '368', name: 'Боян Гечев', group: 3 },
+            { number: '367', name: 'Лъчезар Хумбаджиев', group: 3 },
+            { number: '366', name: 'Виолета Масларска', group: 3 },
+            { number: '365', name: 'Радослав Николов', group: 3 }
+        ];
+
+        // Utility functions
+        function getMondayOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        function isWorkDay(date) {
+            const day = date.getDay();
+            return day >= 1 && day <= 5;
+        }
+
+        function isOfficeDay(date) {
+            if (!isWorkDay(date)) return false;
+            
+            const startMonday = getMondayOfWeek(WORK_SCHEDULE.startDate);
+            const currentMonday = getMondayOfWeek(date);
+            const weeksDiff = Math.round((currentMonday - startMonday) / (7 * 24 * 60 * 60 * 1000));
+            
+            const totalWeeksInCycle = WORK_SCHEDULE.pattern.reduce((sum, p) => sum + p.weeks, 0);
+            const cyclePosition = ((weeksDiff % totalWeeksInCycle) + totalWeeksInCycle) % totalWeeksInCycle;
+            const dayOfWeek = date.getDay();
+            
+            let weekCount = 0;
+            for (const pattern of WORK_SCHEDULE.pattern) {
+                if (cyclePosition >= weekCount && cyclePosition < weekCount + pattern.weeks) {
+                    return pattern.days.includes(dayOfWeek);
+                }
+                weekCount += pattern.weeks;
+            }
+            return false;
+        }
+
+        function getDayStatus(date) {
+            if (!isWorkDay(date)) return 'weekend';
+            return isOfficeDay(date) ? 'office' : 'remote';
+        }
+
+        function getStatusDescription(status) {
+            return status === 'office' ? 'Офис' : status === 'remote' ? 'Вкъщи' : 'Почивка';
+        }
+
+        function formatDate(date) {
+            return `${date.getDate()} ${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()} (${DAY_NAMES[date.getDay()]})`;
+        }
+
+        function getNextOfficeDays(fromDate = new Date(), count = 2) {
+            const officeDays = [];
+            const searchDate = new Date(fromDate);
+            searchDate.setDate(searchDate.getDate() + 1);
+            
+            for (let i = 0; i < 60 && officeDays.length < count; i++) {
+                if (isOfficeDay(searchDate)) {
+                    officeDays.push({
+                        date: new Date(searchDate),
+                        dayName: DAY_NAMES[searchDate.getDay()],
+                        dayNumber: searchDate.getDate(),
+                        month: MONTH_NAMES[searchDate.getMonth()],
+                        shortDate: `${searchDate.getDate()}.${(searchDate.getMonth() + 1).toString().padStart(2, '0')}`
+                    });
+                }
+                searchDate.setDate(searchDate.getDate() + 1);
+            }
+            
+            return officeDays;
+        }
+
+        // Sidebar Component
+        function Sidebar({ currentPage, setCurrentPage }) {
+            return (
+                <div className="sidebar">
+                    <div className="sidebar-header">
+                        <div className="user-profile">
+                            <div className="user-avatar">🪰</div>
+                            <div className="user-info">
+                                <h3>Welcome</h3>
+                                <p>Market Data UK</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <nav className="nav-menu">
+                        <div className={`nav-item ${currentPage === 'home' ? 'active' : ''}`} onClick={() => setCurrentPage('home')}>
+                            <i className="fas fa-home"></i>
+                            <span>Home</span>
+                        </div>
+                        <div className={`nav-item ${currentPage === 'calendar' ? 'active' : ''}`} onClick={() => setCurrentPage('calendar')}>
+                            <i className="fas fa-calendar"></i>
+                            <span>Office Calendar</span>
+                        </div>
+                        <div className={`nav-item ${currentPage === 'seats' ? 'active' : ''}`} onClick={() => setCurrentPage('seats')}>
+                            <i className="fas fa-chair"></i>
+                            <span>Seats</span>
+                        </div>
+                    </nav>
+
+                    <div className="sidebar-footer">
+                        <button className="contact-btn">Contact Admin</button>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Bottom Navigation Component (Mobile)
+        function BottomNav({ currentPage, setCurrentPage }) {
+            return (
+                <div className="bottom-nav">
+                    <div className="bottom-nav-items">
+                        <div 
+                            className={`bottom-nav-item ${currentPage === 'home' ? 'active' : ''}`} 
+                            onClick={() => setCurrentPage('home')}
+                        >
+                            <i className="fas fa-home"></i>
+                            <span>Home</span>
+                        </div>
+                        <div 
+                            className={`bottom-nav-item ${currentPage === 'calendar' ? 'active' : ''}`} 
+                            onClick={() => setCurrentPage('calendar')}
+                        >
+                            <i className="fas fa-calendar"></i>
+                            <span>Calendar</span>
+                        </div>
+                        <div 
+                            className={`bottom-nav-item ${currentPage === 'seats' ? 'active' : ''}`} 
+                            onClick={() => setCurrentPage('seats')}
+                        >
+                            <i className="fas fa-chair"></i>
+                            <span>Seats</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Home Component
+        function Home({ setCurrentPage }) {
+            const today = new Date();
+            const status = getDayStatus(today);
+            const nextOfficeDays = getNextOfficeDays(today, 2);
+
+            return (
+                <div className="fade-in">
+                    <div className="content-header">
+                        <h1>🪰 Dashboard</h1>
+                        <div className="search-bar">
+                            <input type="text" className="search-input" placeholder="Search..." />
+                            <button className="icon-btn"><i className="fas fa-bell"></i></button>
+                        </div>
+                    </div>
+
+                    <div className="status-info">
+                        <h3>Днес: {formatDate(today)}</h3>
+                        <div className={`status-badge ${status}`}>
+                            {status === 'office' && '🏢'} {getStatusDescription(status)}
+                        </div>
+                    </div>
+
+                    <div className="dashboard-grid">
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">📅 Офис календар</h2>
+                                <a href="#" className="card-link" onClick={(e) => { e.preventDefault(); setCurrentPage('calendar'); }}>Виж пълен →</a>
+                            </div>
+                            <div style={{ padding: '1.5rem' }}>
+                                <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                                    Следващи офис дни:
+                                </h3>
+                                {nextOfficeDays.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        {nextOfficeDays.map((day, index) => (
+                                            <div 
+                                                key={index} 
+                                                style={{ 
+                                                    background: 'var(--secondary-bg)',
+                                                    padding: '1rem',
+                                                    borderRadius: '8px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '1rem',
+                                                    borderLeft: '3px solid var(--accent-cyan)'
+                                                }}
+                                            >
+                                                <div style={{ 
+                                                    fontSize: '2rem',
+                                                    fontWeight: '700',
+                                                    color: 'var(--accent-cyan)',
+                                                    minWidth: '50px',
+                                                    textAlign: 'center'
+                                                }}>
+                                                    {day.dayNumber}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: '600', fontSize: '1rem' }}>
+                                                        {day.dayName}
+                                                    </div>
+                                                    <div style={{ 
+                                                        fontSize: '0.85rem', 
+                                                        color: 'var(--text-secondary)' 
+                                                    }}>
+                                                        {day.month}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
+                                        Няма предстоящи офис дни
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <div className="card-header">
+                                <h2 className="card-title">🪑 Офис места</h2>
+                                <a href="#" className="card-link" onClick={(e) => { e.preventDefault(); setCurrentPage('seats'); }}>Виж всички →</a>
+                            </div>
+                            <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                <div style={{ 
+                                    fontSize: '4rem', 
+                                    fontWeight: '800',
+                                    background: 'linear-gradient(135deg, #00d4ff, #00c9a7)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent'
+                                }}>
+                                    {OFFICE_SEATS.length}
+                                </div>
+                                <div style={{ color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Места</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Calendar Component
+        function Calendar() {
+            const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+            const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
+            const generateCalendar = (month, year) => {
+                const firstDay = new Date(year, month, 1);
+                const startDate = new Date(firstDay);
+                
+                const dayOfWeek = firstDay.getDay();
+                const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                startDate.setDate(firstDay.getDate() - daysToMonday);
+                
+                const calendar = [];
+                const today = new Date();
+                
+                for (let week = 0; week < 6; week++) {
+                    for (let day = 0; day < 7; day++) {
+                        const currentDate = new Date(startDate);
+                        currentDate.setDate(startDate.getDate() + (week * 7) + day);
+                        
+                        calendar.push({
+                            date: new Date(currentDate),
+                            dayNumber: currentDate.getDate(),
+                            isCurrentMonth: currentDate.getMonth() === month,
+                            isToday: currentDate.toDateString() === today.toDateString(),
+                            status: getDayStatus(currentDate)
+                        });
+                    }
+                }
+                
+                return calendar;
+            };
+
+            const calendar = generateCalendar(currentMonth, currentYear);
+            const today = new Date();
+            const status = getDayStatus(today);
+
+            return (
+                <div className="fade-in">
+                    <div className="content-header">
+                        <h1>📅 Офис календар</h1>
+                    </div>
+
+                    <div className="status-info">
+                        <h3>Днес: {formatDate(today)}</h3>
+                        <div className={`status-badge ${status}`}>
+                            {status === 'office' && '🏢'} {getStatusDescription(status)}
+                        </div>
+                    </div>
+
+                    <div className="legend">
+                        <div className="legend-item">
+                            <div className="legend-color office"></div>
+                            <span>Офис</span>
+                        </div>
+                        <div className="legend-item">
+                            <div className="legend-color remote"></div>
+                            <span>Вкъщи</span>
+                        </div>
+                        <div className="legend-item">
+                            <div className="legend-color weekend"></div>
+                            <span>Уикенд</span>
+                        </div>
+                    </div>
+
+                    <div className="calendar-container">
+                        <div className="calendar-header">
+                            <h2>{MONTH_NAMES[currentMonth]} {currentYear}</h2>
+                            <div className="calendar-controls">
+                                <button className="nav-btn" onClick={() => {
+                                    if (currentMonth === 0) {
+                                        setCurrentMonth(11);
+                                        setCurrentYear(currentYear - 1);
+                                    } else {
+                                        setCurrentMonth(currentMonth - 1);
+                                    }
+                                }}>
+                                    <i className="fas fa-chevron-left"></i>
+                                </button>
+                                <button className="today-btn" onClick={() => {
+                                    setCurrentMonth(new Date().getMonth());
+                                    setCurrentYear(new Date().getFullYear());
+                                }}>Днес</button>
+                                <button className="nav-btn" onClick={() => {
+                                    if (currentMonth === 11) {
+                                        setCurrentMonth(0);
+                                        setCurrentYear(currentYear + 1);
+                                    } else {
+                                        setCurrentMonth(currentMonth + 1);
+                                    }
+                                }}>
+                                    <i className="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="calendar-grid">
+                            {['Пон', 'Вто', 'Сря', 'Чет', 'Пет', 'Съб', 'Нед'].map(day => (
+                                <div key={day} className="weekday">{day}</div>
+                            ))}
+                            {calendar.map((day, index) => (
+                                <div
+                                    key={index}
+                                    className={`calendar-day ${day.status} ${!day.isCurrentMonth ? 'other-month' : ''} ${day.isToday ? 'today' : ''}`}
+                                >
+                                    <div className="day-number">{day.dayNumber}</div>
+                                    <div className="day-status">{getStatusDescription(day.status)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Seats Component
+        function Seats() {
+            // Групиране на местата по group property
+            const groupedSeats = OFFICE_SEATS.reduce((acc, seat) => {
+                const group = seat.group || 1;
+                if (!acc[group]) acc[group] = [];
+                acc[group].push(seat);
+                return acc;
+            }, {});
+
+            return (
+                <div className="fade-in">
+                    <div className="content-header">
+                        <h1>🪑 Офис места</h1>
+                    </div>
+
+                    <div className="office-seats-container">
+                        {Object.entries(groupedSeats).map(([groupNum, seats]) => (
+                            <div key={groupNum} className="office-seats-group">
+                                <div className="office-seats-grid">
+                                    {seats.map((seat, index) => (
+                                        <div key={index} className="office-seat">
+                                            <div className="seat-number">{seat.number}</div>
+                                            <div className={seat.name === 'Свободно' ? 'seat-empty' : 'seat-name'}>
+                                                {seat.name}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Main App
+        function App() {
+            const [currentPage, setCurrentPage] = useState('home');
+
+            return (
+                <div className="app-container">
+                    <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                    <main className="main-content">
+                        {currentPage === 'home' && <Home setCurrentPage={setCurrentPage} />}
+                        {currentPage === 'calendar' && <Calendar />}
+                        {currentPage === 'seats' && <Seats />}
+                    </main>
+                    <BottomNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                </div>
+            );
+        }
+
+        // Render
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
+
