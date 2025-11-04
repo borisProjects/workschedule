@@ -99,3 +99,5 @@ Install Command: npm install
 **Важно:** Провери деплоймент логовете във Vercel Dashboard → Deployments → [последен deployment] → View Function Logs
 
 
+
+

@@ -93,3 +93,5 @@ git push
 
 **TL;DR: Най-вероятно трябва да настроиш Root Directory на `work-schedule-app` във Vercel Settings!**
 
+
+

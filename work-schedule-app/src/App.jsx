@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Calendar from './pages/Calendar';
 import Seats from './pages/Seats';
 import Events from './pages/Events';
+import Admin from './pages/Admin';
 import Login from './pages/Login';
 
 function AppContent() {
@@ -46,6 +47,7 @@ function AppContent() {
         {currentPage === 'calendar' && <Calendar />}
         {currentPage === 'seats' && <Seats />}
         {currentPage === 'events' && <Events />}
+        {currentPage === 'admin' && <Admin />}
       </main>
       <BottomNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
     </div>

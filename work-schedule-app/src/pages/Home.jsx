@@ -2,13 +2,24 @@ import { useState, useEffect } from 'react';
 import { getDayStatus, getStatusDescription, formatDate, getNextOfficeDays } from '../utils/schedule';
 import { OFFICE_SEATS } from '../data/constants';
 import { supabase } from '../config/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 function Home({ setCurrentPage }) {
+    const { isAdmin } = useAuth();
     const today = new Date();
     const status = getDayStatus(today);
     const nextOfficeDays = getNextOfficeDays(today, 2);
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
+    const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsDesktop(window.innerWidth > 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Зареждане на предстоящи събития
     useEffect(() => {
@@ -43,11 +54,51 @@ function Home({ setCurrentPage }) {
                 <h1>🪰 Dashboard</h1>
             </div>
 
-            <div className="status-info">
-                <h3>Днес: {formatDate(today)}</h3>
-                <div className={`status-badge ${status}`}>
-                    {status === 'office' && '🏢'} {getStatusDescription(status)}
+            <div className="status-info" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1rem'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                    <h3>Днес: {formatDate(today)}</h3>
+                    <div className={`status-badge ${status}`}>
+                        {status === 'office' && '🏢'} {getStatusDescription(status)}
+                    </div>
                 </div>
+                {isAdmin && isDesktop && (
+                    <button
+                        onClick={() => setCurrentPage('admin')}
+                        style={{
+                            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                            color: 'white',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            fontSize: '0.95rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                            transition: 'all 0.3s ease',
+                            whiteSpace: 'nowrap'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 6px 20px rgba(245, 158, 11, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.3)';
+                        }}
+                    >
+                        <i className="fas fa-crown"></i>
+                        Администрация
+                    </button>
+                )}
             </div>
 
             <div className="dashboard-grid">

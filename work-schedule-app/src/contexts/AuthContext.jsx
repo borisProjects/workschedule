@@ -86,13 +86,17 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('currentUser');
     };
 
+    // Проверка дали потребителят е admin
+    const isAdmin = user?.name === 'Юлия Любенова' || user?.name === 'Борис Иванов';
+
     const value = {
         user,
         loading,
         employees,
         login,
         logout,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
+        isAdmin
     };
 
     return (
