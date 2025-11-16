@@ -115,10 +115,43 @@ function Home({ setCurrentPage }) {
         findNextBirthday();
     }, []);
 
+    const { logout } = useAuth();
+
     return (
         <div className="fade-in">
-            <div className="content-header">
-                <h1>🪰 Dashboard</h1>
+            <div className="content-header" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', position: 'relative', gap: '1rem' }}>
+                <h1 style={{ margin: 0, flex: '0 0 auto', lineHeight: '1.2' }}>🪰 Dashboard</h1>
+                <button
+                    onClick={logout}
+                    style={{
+                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '0.5rem 0.75rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1rem',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
+                        flexShrink: 0,
+                        alignSelf: 'center',
+                        lineHeight: '1'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.transform = 'scale(1.05)';
+                        e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.transform = 'scale(1)';
+                        e.target.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.3)';
+                    }}
+                    title="Изход"
+                >
+                    <i className="fas fa-sign-out-alt"></i>
+                </button>
             </div>
 
             <div className="status-info" style={{ 

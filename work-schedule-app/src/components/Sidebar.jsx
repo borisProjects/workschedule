@@ -1,7 +1,7 @@
 import { useAuth } from '../contexts/AuthContext';
 
 function Sidebar({ currentPage, setCurrentPage }) {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
 
     return (
         <div className="sidebar">
@@ -45,23 +45,6 @@ function Sidebar({ currentPage, setCurrentPage }) {
                     <span>Events</span>
                 </div>
             </nav>
-
-            <div className="sidebar-footer">
-                <button 
-                    className="contact-btn" 
-                    onClick={logout}
-                    style={{
-                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem'
-                    }}
-                >
-                    <i className="fas fa-sign-out-alt"></i>
-                    Изход
-                </button>
-            </div>
         </div>
     );
 }
