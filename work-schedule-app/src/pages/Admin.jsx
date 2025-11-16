@@ -2,14 +2,44 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
+// Помощна функция за форматиране на рожден ден за базата данни
+// Приема формат DD-MM и връща пълна дата с текущата година
+const formatBirthdayForDB = (birthdayInput) => {
+    if (!birthdayInput) return null;
+    // Очакваме формат DD-MM или DD-MM-YYYY
+    const parts = birthdayInput.split('-');
+    if (parts.length === 2) {
+        // DD-MM формат - добавяме текущата година
+        const currentYear = new Date().getFullYear();
+        // parts[0] е денят, parts[1] е месецът
+        return `${currentYear}-${parts[1]}-${parts[0]}`;
+    } else if (parts.length === 3) {
+        // DD-MM-YYYY формат - заменяме годината с текущата
+        const currentYear = new Date().getFullYear();
+        // parts[0] е денят, parts[1] е месецът, parts[2] е годината (игнорираме я)
+        return `${currentYear}-${parts[1]}-${parts[0]}`;
+    }
+    return null;
+};
+
+// Помощна функция за форматиране на рожден ден за input поле
+// Приема дата от базата и връща DD-MM формат (български стандарт)
+const formatBirthdayForInput = (birthdayDate) => {
+    if (!birthdayDate) return '';
+    const date = new Date(birthdayDate);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${day}-${month}`;
+};
+
 function Admin() {
     const { user, isAdmin } = useAuth();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
-    const [newEmployee, setNewEmployee] = useState({ name: '', seat_number: '', seat_group: 1 });
+    const [newEmployee, setNewEmployee] = useState({ name: '', seat_number: '', seat_group: 1, birthday: '' });
     const [editingEmployee, setEditingEmployee] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', seat_number: '', seat_group: 1 });
+    const [editForm, setEditForm] = useState({ name: '', seat_number: '', seat_group: 1, birthday: '' });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
@@ -62,6 +92,8 @@ function Admin() {
         try {
             const seatNumber = newEmployee.seat_number?.trim() || null;
             const seatGroup = seatNumber ? (newEmployee.seat_group || null) : null;
+            // Форматиране на рожден ден - ако е въведен, използваме текущата година за датата
+            const birthday = newEmployee.birthday ? formatBirthdayForDB(newEmployee.birthday) : null;
             
             const { error } = await supabase
                 .from('employees')
@@ -69,12 +101,13 @@ function Admin() {
                     name: newEmployee.name.trim(),
                     seat_number: seatNumber,
                     seat_group: seatGroup,
+                    birthday: birthday,
                     is_active: true
                 }]);
 
             if (error) throw error;
 
-            setNewEmployee({ name: '', seat_number: '', seat_group: 1 });
+            setNewEmployee({ name: '', seat_number: '', seat_group: 1, birthday: '' });
             setShowAddForm(false);
             setSuccess('Служителят е добавен успешно!');
             await loadEmployees();
@@ -90,10 +123,15 @@ function Admin() {
     // Започване на редактиране
     const handleStartEdit = (employee) => {
         setEditingEmployee(employee.id);
+        // Форматиране на рожден ден за показване (MM-DD формат)
+        const birthdayDisplay = employee.birthday 
+            ? formatBirthdayForInput(employee.birthday) 
+            : '';
         setEditForm({
             name: employee.name,
             seat_number: employee.seat_number || '',
-            seat_group: employee.seat_group || 1
+            seat_group: employee.seat_group || 1,
+            birthday: birthdayDisplay
         });
         setShowAddForm(false);
         setError('');
@@ -103,7 +141,7 @@ function Admin() {
     // Отказ от редактиране
     const handleCancelEdit = () => {
         setEditingEmployee(null);
-        setEditForm({ name: '', seat_number: '', seat_group: 1 });
+        setEditForm({ name: '', seat_number: '', seat_group: 1, birthday: '' });
     };
 
     // Обновяване на служител
@@ -120,20 +158,23 @@ function Admin() {
         try {
             const seatNumber = editForm.seat_number?.trim() || null;
             const seatGroup = seatNumber ? (editForm.seat_group || null) : null;
+            // Форматиране на рожден ден - ако е въведен, използваме текущата година за датата
+            const birthday = editForm.birthday ? formatBirthdayForDB(editForm.birthday) : null;
 
             const { error } = await supabase
                 .from('employees')
                 .update({
                     name: editForm.name.trim(),
                     seat_number: seatNumber,
-                    seat_group: seatGroup
+                    seat_group: seatGroup,
+                    birthday: birthday
                 })
                 .eq('id', editingEmployee);
 
             if (error) throw error;
 
             setEditingEmployee(null);
-            setEditForm({ name: '', seat_number: '', seat_group: 1 });
+            setEditForm({ name: '', seat_number: '', seat_group: 1, birthday: '' });
             setSuccess('Служителят е обновен успешно!');
             await loadEmployees();
             
@@ -333,6 +374,35 @@ function Admin() {
                                 </select>
                             </div>
                         </div>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                                🎂 Рожден ден (опционално)
+                            </label>
+                            <input
+                                type="text"
+                                value={newEmployee.birthday}
+                                onChange={(e) => setNewEmployee({ ...newEmployee, birthday: e.target.value })}
+                                placeholder="DD-MM (напр. 15-03 за 15 март)"
+                                pattern="^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])$"
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    border: '2px solid var(--border)',
+                                    borderRadius: '8px',
+                                    fontSize: '1rem',
+                                    background: 'var(--secondary-bg)',
+                                    color: 'var(--text)'
+                                }}
+                            />
+                            <p style={{ 
+                                fontSize: '0.85rem', 
+                                color: 'var(--text-secondary)', 
+                                marginTop: '0.25rem',
+                                fontStyle: 'italic'
+                            }}>
+                                Формат: DD-MM (напр. 15-03 за 15 март, 25-12 за 25 декември)
+                            </p>
+                        </div>
                         <button
                             type="submit"
                             style={{
@@ -450,6 +520,35 @@ function Admin() {
                                                     </select>
                                                 </div>
                                             </div>
+                                            <div style={{ marginBottom: '1.5rem' }}>
+                                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                                                    🎂 Рожден ден (опционално)
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.birthday}
+                                                    onChange={(e) => setEditForm({ ...editForm, birthday: e.target.value })}
+                                                    placeholder="DD-MM (напр. 15-03 за 15 март)"
+                                                    pattern="^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])$"
+                                                    style={{
+                                                        width: '100%',
+                                                        padding: '0.75rem',
+                                                        border: '2px solid var(--border)',
+                                                        borderRadius: '8px',
+                                                        fontSize: '1rem',
+                                                        background: 'var(--secondary-bg)',
+                                                        color: 'var(--text)'
+                                                    }}
+                                                />
+                                                <p style={{ 
+                                                    fontSize: '0.85rem', 
+                                                    color: 'var(--text-secondary)', 
+                                                    marginTop: '0.25rem',
+                                                    fontStyle: 'italic'
+                                                }}>
+                                                    Формат: DD-MM (напр. 15-03 за 15 март, 25-12 за 25 декември)
+                                                </p>
+                                            </div>
                                             <div style={{ display: 'flex', gap: '0.75rem' }}>
                                                 <button
                                                     type="submit"
@@ -510,6 +609,11 @@ function Admin() {
                                                     ? `Място ${employee.seat_number}${employee.seat_group ? ` • Група ${employee.seat_group}` : ''}`
                                                     : 'Няма офис място'
                                                 }
+                                                {employee.birthday && (
+                                                    <span style={{ marginLeft: '0.5rem' }}>
+                                                        • 🎂 {formatBirthdayForInput(employee.birthday)}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>

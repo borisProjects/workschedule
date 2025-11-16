@@ -11,6 +11,8 @@ function Home({ setCurrentPage }) {
     const nextOfficeDays = getNextOfficeDays(today, 2);
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
+    const [nextBirthday, setNextBirthday] = useState(null);
+    const [loadingBirthday, setLoadingBirthday] = useState(true);
     const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
 
     useEffect(() => {
@@ -46,6 +48,71 @@ function Home({ setCurrentPage }) {
         };
 
         loadUpcomingEvents();
+    }, []);
+
+    // Зареждане на служители и намиране на следващия рожден ден
+    useEffect(() => {
+        const findNextBirthday = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('employees')
+                    .select('name, birthday')
+                    .eq('is_active', true)
+                    .not('birthday', 'is', null);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    setNextBirthday(null);
+                    setLoadingBirthday(false);
+                    return;
+                }
+
+                const today = new Date();
+                const currentYear = today.getFullYear();
+                const currentMonth = today.getMonth();
+                const currentDay = today.getDate();
+
+                // Намиране на следващия рожден ден
+                let nextBirthdayData = null;
+                let minDaysUntil = Infinity;
+
+                data.forEach(employee => {
+                    if (!employee.birthday) return;
+
+                    const birthdayDate = new Date(employee.birthday);
+                    const birthdayMonth = birthdayDate.getMonth();
+                    const birthdayDay = birthdayDate.getDate();
+
+                    // Създаваме дата за тази година
+                    let birthdayThisYear = new Date(currentYear, birthdayMonth, birthdayDay);
+                    
+                    // Ако рожден денът вече е минал тази година, вземаме следващата година
+                    if (birthdayThisYear < today) {
+                        birthdayThisYear = new Date(currentYear + 1, birthdayMonth, birthdayDay);
+                    }
+
+                    const daysUntil = Math.ceil((birthdayThisYear - today) / (1000 * 60 * 60 * 24));
+
+                    if (daysUntil < minDaysUntil) {
+                        minDaysUntil = daysUntil;
+                        nextBirthdayData = {
+                            name: employee.name,
+                            date: birthdayThisYear,
+                            daysUntil: daysUntil
+                        };
+                    }
+                });
+
+                setNextBirthday(nextBirthdayData);
+                setLoadingBirthday(false);
+            } catch (error) {
+                console.error('Грешка при зареждане на рождени дни:', error);
+                setLoadingBirthday(false);
+            }
+        };
+
+        findNextBirthday();
     }, []);
 
     return (
@@ -254,6 +321,60 @@ function Home({ setCurrentPage }) {
                                 <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>📅</div>
                                 <p style={{ color: 'var(--text-secondary)' }}>
                                     Няма предстоящи събития
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="card">
+                    <div className="card-header">
+                        <h2 className="card-title">🎂 Рожден ден</h2>
+                    </div>
+                    <div style={{ padding: '1.5rem' }}>
+                        {loadingBirthday ? (
+                            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                                ⏳ Зареждане...
+                            </div>
+                        ) : nextBirthday ? (
+                            <div style={{ 
+                                background: 'var(--secondary-bg)',
+                                padding: '1rem',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '1rem',
+                                borderLeft: '3px solid #f59e0b'
+                            }}>
+                                <div style={{ 
+                                    fontSize: '2rem',
+                                    fontWeight: '700',
+                                    color: '#f59e0b',
+                                    minWidth: '50px',
+                                    textAlign: 'center'
+                                }}>
+                                    {nextBirthday.date.getDate()}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: '600', fontSize: '1rem' }}>
+                                        {nextBirthday.name}
+                                    </div>
+                                    <div style={{ 
+                                        fontSize: '0.85rem', 
+                                        color: 'var(--text-secondary)' 
+                                    }}>
+                                        {nextBirthday.date.toLocaleDateString('bg-BG', { month: 'long' })}
+                                        {nextBirthday.daysUntil === 0 && ' (днес!)'}
+                                        {nextBirthday.daysUntil === 1 && ' (утре)'}
+                                        {nextBirthday.daysUntil > 1 && ` (след ${nextBirthday.daysUntil} дни)`}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎂</div>
+                                <p style={{ color: 'var(--text-secondary)' }}>
+                                    Няма предстоящи рождени дни
                                 </p>
                             </div>
                         )}
