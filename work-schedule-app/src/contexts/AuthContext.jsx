@@ -87,8 +87,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Проверка дали потребителят е admin
-    const isAdmin = user?.name === 'Юлия Любенова' || user?.name === 'Борис Иванов';
-
+    const isAdmin = user?.is_admin === true;
     const value = {
         user,
         loading,
