@@ -102,7 +102,7 @@ function Login() {
                                 backgroundPosition: 'right 1rem center'
                             }}
                         >
-                            <option value="">-- Изберете служител --</option>
+                            <option value="">-- Избери си герой --</option>
                             {employees.map((employee) => (
                                 <option key={employee.id} value={employee.name}>
                                     {employee.name} {employee.seat_number ? `(Място ${employee.seat_number})` : ''}
