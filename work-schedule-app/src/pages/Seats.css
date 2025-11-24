@@ -49,6 +49,22 @@
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Плавно движение */
     position: relative;
     overflow: hidden;
+    cursor: default; /* По подразбиране не се клика */
+}
+
+/* Курсор за админи */
+.office-seat.clickable {
+    cursor: pointer;
+}
+
+/* При hover за админи - лек ефект */
+.office-seat.clickable:hover::after {
+    content: '✎';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 1rem;
+    color: rgba(0,0,0,0.3);
 }
 
 /* Стил за ЗАЕТИ места - Зелената тема на сайта */
@@ -65,7 +81,11 @@
     border: 1px solid #cbd5e1; /* Плътна тънка сива рамка вместо dashed */
     box-shadow: none; /* Без сянка */
     opacity: 0.7; /* Лека прозрачност за да "потънат" назад */
-    cursor: not-allowed; /* Курсорът показва, че не е активно */
+}
+
+.office-seat.empty.clickable {
+    cursor: pointer; /* И свободните са кликаеми за админи */
+    /* Връщаме курсора за админи, въпреки че за другите е not-allowed */
 }
 
 /* Ховър ефект */
@@ -77,9 +97,16 @@
 
 /* Специален ховър за свободните места - по-малко движение */
 .office-seat.empty:hover {
-    transform: none; /* Не се мърдат при ховър */
+    transform: none; 
     box-shadow: none;
-    opacity: 0.8; /* Леко изсветляване само */
+    opacity: 0.8; 
+}
+
+/* Но за админи искаме ефект при ховър и на свободните */
+.office-seat.empty.clickable:hover {
+    border-color: #34d977; /* Зелена рамка при ховър */
+    opacity: 1;
+    background-color: #fff;
 }
 
 /* Номер на мястото */
@@ -102,9 +129,149 @@
     /* Справяне с дълги имена */
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2; /* Standard property */
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* --- MODAL STYLES --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(3px);
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #0f172a;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #64748b;
+    padding: 0 0.5rem;
+}
+
+.close-btn:hover {
+    color: #ef4444;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #34d977;
+    box-shadow: 0 0 0 3px rgba(52, 217, 119, 0.2);
+}
+
+.help-text {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    background: #f8fafc;
+    padding: 0.75rem;
+    border-radius: 8px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.btn-cancel {
+    padding: 0.75rem 1.5rem;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #64748b;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.btn-save {
+    padding: 0.75rem 1.5rem;
+    background: #34d977;
+    border: none;
+    border-radius: 8px;
+    color: #062010;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-save:hover {
+    background: #2cc96a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(52, 217, 119, 0.2);
+}
+
+.btn-save:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Адаптивност за мобилни телефони */
