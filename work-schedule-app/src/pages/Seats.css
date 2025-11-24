@@ -1,0 +1,133 @@
+/* В края на App.css */
+
+/* Seats Container - Flex Column за вертикално подреждане */
+.office-seats-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5rem; /* Ясно разстояние между четирите големи блока */
+    padding: 2rem;
+    width: 100%;
+    max-width: 700px; /* Оптимална ширина за четимост */
+    margin: 0 auto;
+}
+
+/* Блок от места (6 бюра) */
+.seat-block {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: relative;
+}
+
+/* Ред с бюра (3 колони) */
+.desk-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Три равни колони */
+    gap: 1rem; /* Разстояние между бюрата хоризонтално */
+    width: 100%;
+    margin-bottom: 1rem; /* Разстояние между горния и долния ред на блока */
+}
+
+/* Махаме марджина на последния ред в блока */
+.desk-row:last-child {
+    margin-bottom: 0;
+}
+
+/* Индивидуално място (Бюро) - Основен стил */
+.office-seat {
+    height: 110px; /* Фиксирана височина за абсолютно всички */
+    width: 100%;   /* Запълва клетката на грида */
+    border-radius: 12px; /* Модерни заоблени ъгли */
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Мека сянка */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Плавно движение */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Стил за ЗАЕТИ места - Зелената тема на сайта */
+.office-seat.occupied {
+    background: linear-gradient(135deg, #34d977 0%, #2cc96a 100%);
+    color: #062010;
+    border: 1px solid #2cc96a;
+}
+
+/* Стил за СВОБОДНИ места - Сиви/Unavailable */
+.office-seat.empty {
+    background-color: #e2e8f0; /* По-тъмно сиво за фон */
+    color: #94a3b8; /* Блед текст */
+    border: 1px solid #cbd5e1; /* Плътна тънка сива рамка вместо dashed */
+    box-shadow: none; /* Без сянка */
+    opacity: 0.7; /* Лека прозрачност за да "потънат" назад */
+    cursor: not-allowed; /* Курсорът показва, че не е активно */
+}
+
+/* Ховър ефект */
+.office-seat:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+    z-index: 2;
+}
+
+/* Специален ховър за свободните места - по-малко движение */
+.office-seat.empty:hover {
+    transform: none; /* Не се мърдат при ховър */
+    box-shadow: none;
+    opacity: 0.8; /* Леко изсветляване само */
+}
+
+/* Номер на мястото */
+.seat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+
+/* Име на служителя */
+.seat-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.2;
+    width: 100%;
+    
+    /* Справяне с дълги имена */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Адаптивност за мобилни телефони */
+@media (max-width: 480px) {
+    .office-seats-container {
+        padding: 1rem;
+        gap: 3rem;
+    }
+    
+    .desk-row {
+        gap: 0.5rem;
+    }
+
+    .office-seat {
+        height: 90px;
+        border-radius: 8px;
+    }
+
+    .seat-number {
+        font-size: 1.4rem;
+    }
+
+    .seat-name {
+        font-size: 0.75rem;
+    }
+}

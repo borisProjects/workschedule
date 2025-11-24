@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
-import { OFFICE_SEATS } from '../data/constants';
 import { supabase } from '../config/supabase';
+import { OFFICE_SEATS } from '../data/constants';
+import './Seats.css';
+
+// Конфигурация: Всеки блок има 'top' (горни 3 места) и 'bottom' (долни 3 места)
+const ROWS_CONFIG = [
+    { id: 1, top: ['377', '376', '375'], bottom: ['380', '379', '378'] },
+    { id: 2, top: ['383', '382', '381'], bottom: ['386', '385', '384'] },
+    { id: 3, top: ['389', '388', '387'], bottom: ['392', '391', '390'] },
+    { id: 4, top: ['395', '394', '393'], bottom: ['398', '397', '396'] }
+];
 
 function Seats() {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Зареждане на служителите от базата данни
     useEffect(() => {
         const loadEmployees = async () => {
             try {
@@ -19,37 +27,22 @@ function Seats() {
                 setEmployees(data || []);
                 setLoading(false);
             } catch (error) {
-                console.error('Грешка при зареждане на служители:', error);
+                console.error('Грешка:', error);
                 setLoading(false);
             }
         };
 
         loadEmployees();
 
-        // Слушане за промени в employees таблицата за автоматично обновяване
         const subscription = supabase
             .channel('employees_changes')
-            .on('postgres_changes', 
-                { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'employees' 
-                }, 
-                (payload) => {
-                    console.log('Промяна в employees таблицата:', payload);
-                    // Презареждане на данните при всяка промяна
-                    loadEmployees();
-                }
-            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => loadEmployees())
             .subscribe();
 
-        // Почистване на subscription при unmount
-        return () => {
-            subscription.unsubscribe();
-        };
+        return () => subscription.unsubscribe();
     }, []);
 
-    // Допълнително обновяване при фокус на страницата (fallback ако Realtime не работи)
+    // Допълнително обновяване при фокус
     useEffect(() => {
         const handleFocus = () => {
             const loadEmployees = async () => {
@@ -72,43 +65,28 @@ function Seats() {
         return () => window.removeEventListener('focus', handleFocus);
     }, []);
 
-    // Създаване на map за бързо търсене на служител по номер на място
-    const seatToEmployeeMap = employees.reduce((acc, employee) => {
-        if (employee.seat_number) {
-            acc[employee.seat_number] = employee;
-        }
+    const seatMap = employees.reduce((acc, emp) => {
+        if (emp.seat_number) acc[emp.seat_number] = emp;
         return acc;
     }, {});
 
-    // Комбиниране на статичните места с данните от базата
-    const seatsWithEmployees = OFFICE_SEATS.map(seat => {
-        const employee = seatToEmployeeMap[seat.number];
-        // Ако има служител в базата с този номер на място, показваме неговото име
-        // Иначе показваме "Свободно"
-        return {
-            ...seat,
-            name: employee ? employee.name : 'Свободно'
-        };
-    });
-
-    // Групиране на местата по group property
-    const groupedSeats = seatsWithEmployees.reduce((acc, seat) => {
-        const group = seat.group || 1;
-        if (!acc[group]) acc[group] = [];
-        acc[group].push(seat);
-        return acc;
-    }, {});
-
-    if (loading) {
+    const renderSeat = (seatNum) => {
+        const employee = seatMap[seatNum];
+        const staticInfo = OFFICE_SEATS.find(s => s.number === seatNum);
+        const displayName = employee ? employee.name : (staticInfo ? staticInfo.name : 'Свободно');
+        const isEmpty = displayName === 'Свободно';
+        
         return (
-            <div className="fade-in" style={{ textAlign: 'center', padding: '4rem' }}>
-                <div style={{ fontSize: '3rem' }}>⏳</div>
-                <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginTop: '1rem' }}>
-                    Зареждане...
+            <div key={seatNum} className={`office-seat ${isEmpty ? 'empty' : 'occupied'}`}>
+                <div className="seat-number">{seatNum}</div>
+                <div className="seat-name" title={displayName}>
+                    {displayName}
                 </div>
             </div>
         );
-    }
+    };
+
+    if (loading) return <div className="fade-in" style={{ textAlign: 'center', padding: '4rem' }}>⏳ Зареждане...</div>;
 
     return (
         <div className="fade-in">
@@ -117,17 +95,16 @@ function Seats() {
             </div>
 
             <div className="office-seats-container">
-                {Object.entries(groupedSeats).map(([groupNum, seats]) => (
-                    <div key={groupNum} className="office-seats-group">
-                        <div className="office-seats-grid">
-                            {seats.map((seat, index) => (
-                                <div key={index} className="office-seat">
-                                    <div className="seat-number">{seat.number}</div>
-                                    <div className={seat.name === 'Свободно' ? 'seat-empty' : 'seat-name'}>
-                                        {seat.name}
-                                    </div>
-                                </div>
-                            ))}
+                {ROWS_CONFIG.map((block) => (
+                    <div key={block.id} className="seat-block">
+                        {/* Горна група (3 места) */}
+                        <div className="desk-row">
+                            {block.top.map(num => renderSeat(num))}
+                        </div>
+
+                        {/* Долна група (3 места) */}
+                        <div className="desk-row">
+                            {block.bottom.map(num => renderSeat(num))}
                         </div>
                     </div>
                 ))}
@@ -137,5 +114,3 @@ function Seats() {
 }
 
 export default Seats;
-
-
