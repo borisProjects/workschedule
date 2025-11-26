@@ -121,7 +121,7 @@ function Seats() {
     const renderSeat = (seatNum) => {
         const employee = seatMap[seatNum];
         const staticInfo = OFFICE_SEATS.find(s => s.number === seatNum);
-        //const displayName = employee ? employee.name : (staticInfo ? staticInfo.name : 'Свободно');
+        const displayName = employee ? employee.name : (staticInfo ? staticInfo.name : 'Свободно');
         const isEmpty = displayName === 'Свободно';
         
         return (
