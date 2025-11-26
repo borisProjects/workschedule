@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
-import { OFFICE_SEATS } from '../data/constants';
+//import { OFFICE_SEATS } from '../data/constants';
 import { useAuth } from '../contexts/AuthContext';
 import './Seats.css';
 
