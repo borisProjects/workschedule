@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 function Login() {
@@ -6,6 +6,23 @@ function Login() {
     const [selectedEmployee, setSelectedEmployee] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    
+    // Dropdown states
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const dropdownRef = useRef(null);
+
+    // Close dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -27,6 +44,11 @@ function Login() {
         // Ако е успешно, App.jsx автоматично ще пренасочи към Dashboard
     };
 
+    const filteredEmployees = employees.filter(emp => 
+        emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const selectedEmployeeData = employees.find(e => e.name === selectedEmployee);
 
     if (loading) {
         return (
@@ -79,36 +101,168 @@ function Login() {
                 </div>
 
                 <form onSubmit={handleLogin}>
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <select
-                            value={selectedEmployee}
-                            onChange={(e) => {
-                                setSelectedEmployee(e.target.value);
-                                setError('');
-                            }}
-                            required
+                    <div style={{ marginBottom: '1.5rem', position: 'relative' }} ref={dropdownRef}>
+                        <div 
+                            onClick={() => setIsOpen(!isOpen)}
                             style={{
                                 width: '100%',
-                                padding: '0.75rem 1rem',
+                                padding: '1rem',
                                 border: '2px solid var(--border)',
-                                borderRadius: '8px',
+                                borderRadius: '12px',
                                 fontSize: '1rem',
                                 background: 'var(--secondary-bg)',
-                                color: 'var(--text)',
+                                color: selectedEmployee ? 'var(--text)' : 'var(--text-secondary)',
                                 cursor: 'pointer',
-                                appearance: 'none',
-                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236366f1' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                                backgroundRepeat: 'no-repeat',
-                                backgroundPosition: 'right 1rem center'
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                transition: 'all 0.2s ease',
+                                boxShadow: isOpen ? '0 0 0 4px rgba(99, 102, 241, 0.1)' : 'none',
+                                borderColor: isOpen ? 'var(--primary)' : 'var(--border)'
                             }}
                         >
-                            <option value="">-- Избери си герой --</option>
-                            {employees.map((employee) => (
-                                <option key={employee.id} value={employee.name}>
-                                    {employee.name} {employee.seat_number ? `(Място ${employee.seat_number})` : ''}
-                                </option>
-                            ))}
-                        </select>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                {selectedEmployee ? (
+                                    <>
+                                        <div style={{
+                                            width: '32px',
+                                            height: '32px',
+                                            borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                            color: 'white',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '0.9rem',
+                                            fontWeight: '600'
+                                        }}>
+                                            {selectedEmployee.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: '500', color: 'var(--text)' }}>{selectedEmployeeData?.name}</div>
+                                            {selectedEmployeeData?.seat_number && (
+                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                                    Място {selectedEmployeeData.seat_number}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <span>-- Избери си герой --</span>
+                                )}
+                            </div>
+                            <i className={`fas fa-chevron-down`} style={{ 
+                                transition: 'transform 0.2s ease',
+                                transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                color: 'var(--text-secondary)'
+                            }}></i>
+                        </div>
+
+                        {isOpen && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '110%',
+                                left: 0,
+                                right: 0,
+                                background: 'var(--card-bg)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '12px',
+                                boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                                zIndex: 100,
+                                overflow: 'hidden',
+                                animation: 'fadeIn 0.2s ease'
+                            }}>
+                                <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)' }}>
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '0.5rem',
+                                        background: 'var(--secondary-bg)',
+                                        padding: '0.5rem 0.75rem',
+                                        borderRadius: '8px'
+                                    }}>
+                                        <i className="fas fa-search" style={{ color: 'var(--text-secondary)' }}></i>
+                                        <input
+                                            type="text"
+                                            placeholder="Търсене..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            autoFocus
+                                            style={{
+                                                border: 'none',
+                                                background: 'transparent',
+                                                width: '100%',
+                                                color: 'var(--text)',
+                                                fontSize: '0.95rem',
+                                                outline: 'none'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ 
+                                    maxHeight: '250px', 
+                                    overflowY: 'auto',
+                                    padding: '0.5rem'
+                                }}>
+                                    {filteredEmployees.length > 0 ? (
+                                        filteredEmployees.map((employee) => (
+                                            <div
+                                                key={employee.id}
+                                                onClick={() => {
+                                                    setSelectedEmployee(employee.name);
+                                                    setIsOpen(false);
+                                                    setError('');
+                                                    setSearchTerm('');
+                                                }}
+                                                style={{
+                                                    padding: '0.75rem',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.75rem',
+                                                    transition: 'all 0.2s ease',
+                                                    background: selectedEmployee === employee.name ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--secondary-bg)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.background = selectedEmployee === employee.name ? 'rgba(99, 102, 241, 0.1)' : 'transparent'}
+                                            >
+                                                <div style={{
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    borderRadius: '50%',
+                                                    background: 'var(--border)',
+                                                    color: 'var(--text-secondary)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {employee.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: '500', color: 'var(--text)' }}>{employee.name}</div>
+                                                    {employee.seat_number && (
+                                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                                            Място {employee.seat_number}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {selectedEmployee === employee.name && (
+                                                    <i className="fas fa-check" style={{ marginLeft: 'auto', color: 'var(--primary)' }}></i>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                            Няма намерени служители
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {error && (
@@ -136,22 +290,23 @@ function Login() {
                                 : 'var(--border)',
                             color: 'white',
                             border: 'none',
-                            borderRadius: '8px',
+                            borderRadius: '12px',
                             fontSize: '1.1rem',
                             fontWeight: '600',
                             cursor: selectedEmployee ? 'pointer' : 'not-allowed',
                             transition: 'all 0.3s ease',
-                            opacity: isLoading ? 0.7 : 1
+                            opacity: isLoading ? 0.7 : 1,
+                            boxShadow: selectedEmployee ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
                         }}
                         onMouseEnter={(e) => {
                             if (selectedEmployee && !isLoading) {
                                 e.target.style.transform = 'translateY(-2px)';
-                                e.target.style.boxShadow = '0 10px 20px rgba(99, 102, 241, 0.3)';
+                                e.target.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.4)';
                             }
                         }}
                         onMouseLeave={(e) => {
                             e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = 'none';
+                            e.target.style.boxShadow = selectedEmployee ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none';
                         }}
                     >
                         {isLoading ? '⏳ Влизане...' : 'Влез в системата'}

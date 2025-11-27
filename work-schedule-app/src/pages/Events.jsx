@@ -26,48 +26,43 @@ function Events() {
     // Зареждане на всички събития с гласове
     const loadEvents = async () => {
         try {
-            // Зареждаме събитията
+            // Оптимизирана заявка: зареждаме събитията и гласовете наведнъж
             const { data: eventsData, error: eventsError } = await supabase
                 .from('events')
                 .select(`
                     *,
-                    created_by_employee:employees!events_created_by_fkey(name)
+                    created_by_employee:employees!events_created_by_fkey(name),
+                    votes (
+                        *,
+                        employee:employees(name)
+                    )
                 `)
                 .eq('is_active', true)
                 .order('event_date', { ascending: true });
 
             if (eventsError) throw eventsError;
 
-            // За всяко събитие зареждаме гласовете
-            const eventsWithVotes = await Promise.all(
-                (eventsData || []).map(async (event) => {
-                    // Зареждаме всички гласове за това събитие
-                    const { data: votesData, error: votesError } = await supabase
-                        .from('votes')
-                        .select('*, employee:employees(name)')
-                        .eq('event_id', event.id);
+            // Обработваме данните локално
+            const eventsWithVotes = eventsData.map(event => {
+                const votesData = event.votes || [];
+                
+                const yesCount = votesData.filter(v => v.vote_type === 'yes').length;
+                const noCount = votesData.filter(v => v.vote_type === 'no').length;
+                const maybeCount = votesData.filter(v => v.vote_type === 'maybe').length;
 
-                    if (votesError) throw votesError;
+                // Намираме гласа на текущия потребител
+                const userVote = votesData.find(v => v.employee_id === user?.id);
 
-                    // Преброяваме гласовете
-                    const yesCount = votesData?.filter(v => v.vote_type === 'yes').length || 0;
-                    const noCount = votesData?.filter(v => v.vote_type === 'no').length || 0;
-                    const maybeCount = votesData?.filter(v => v.vote_type === 'maybe').length || 0;
-
-                    // Намираме гласа на текущия потребител
-                    const userVote = votesData?.find(v => v.employee_id === user?.id);
-
-                    return {
-                        ...event,
-                        votes: votesData || [],
-                        yesCount,
-                        noCount,
-                        maybeCount,
-                        totalVotes: (votesData?.length || 0),
-                        userVote: userVote?.vote_type || null
-                    };
-                })
-            );
+                return {
+                    ...event,
+                    votes: votesData,
+                    yesCount,
+                    noCount,
+                    maybeCount,
+                    totalVotes: votesData.length,
+                    userVote: userVote?.vote_type || null
+                };
+            });
 
             setEvents(eventsWithVotes);
             setLoading(false);

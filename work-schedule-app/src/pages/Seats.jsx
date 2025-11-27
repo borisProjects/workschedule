@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../config/supabase';
 import { OFFICE_SEATS } from '../data/constants';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +23,9 @@ function Seats() {
     const [assigneeId, setAssigneeId] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const subscriptionRef = useRef(null);
+    const timeoutRef = useRef(null);
+
     // Функция за зареждане на служители
     const loadEmployees = async () => {
         try {
@@ -41,23 +44,31 @@ function Seats() {
         }
     };
 
+    // Debounce функция за обновяване
+    const debouncedLoad = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+            loadEmployees();
+        }, 1000);
+    };
+
     useEffect(() => {
         loadEmployees();
 
-        const subscription = supabase
+        // Абониране за промени (само един канал)
+        subscriptionRef.current = supabase
             .channel('employees_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => loadEmployees())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, debouncedLoad)
             .subscribe();
 
-        return () => subscription.unsubscribe();
+        return () => {
+            if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
     }, []);
 
-    // Обновяване при фокус
-    useEffect(() => {
-        const handleFocus = () => loadEmployees();
-        window.addEventListener('focus', handleFocus);
-        return () => window.removeEventListener('focus', handleFocus);
-    }, []);
+    // Премахваме window focus listener-а, защото е твърде агресивен при много потребители
+    // Realtime subscription-а е достатъчен за синхронизация
 
     // Map за бърз достъп до данните за мястото
     const seatMap = employees.reduce((acc, emp) => {
@@ -67,10 +78,8 @@ function Seats() {
 
     // Обработка на клик върху място
     const handleSeatClick = (seatNum) => {
-        // Позволяваме редакция само ако е админ
-        // Може да добавим и проверка за ширина на екрана (window.innerWidth > 1024), 
-        // но обикновено админ правата са достатъчни.
-        if (!isAdmin) return;
+        // Всеки може да редактира местата
+        // if (!isAdmin) return; // Вече не е нужно да е админ
 
         const currentOccupant = seatMap[seatNum];
         setSelectedSeat(seatNum);
@@ -120,16 +129,16 @@ function Seats() {
 
     const renderSeat = (seatNum) => {
         const employee = seatMap[seatNum];
-        const staticInfo = OFFICE_SEATS.find(s => s.number === seatNum);
-        const displayName = employee ? employee.name : (staticInfo ? staticInfo.name : 'Свободно');
+        // const staticInfo = OFFICE_SEATS.find(s => s.number === seatNum); // Вече не ни трябва за имената
+        const displayName = employee ? employee.name : 'Свободно';
         const isEmpty = displayName === 'Свободно';
         
         return (
             <div 
                 key={seatNum} 
-                className={`office-seat ${isEmpty ? 'empty' : 'occupied'} ${isAdmin ? 'clickable' : ''}`}
+                className={`office-seat ${isEmpty ? 'empty' : 'occupied'} clickable`}
                 onClick={() => handleSeatClick(seatNum)}
-                title={isAdmin ? `Кликни за редакция на място ${seatNum}` : ''}
+                title={`Кликни за редакция на място ${seatNum}`}
             >
                 <div className="seat-number">{seatNum}</div>
                 <div className="seat-name">
@@ -145,7 +154,7 @@ function Seats() {
         <div className="fade-in">
             <div className="content-header">
                 <h1>🪑 Офис места</h1>
-                {isAdmin && <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>ℹ️ Като администратор можете да кликнете върху място, за да промените кой седи там.</p>}
+                <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>ℹ️ Можете да кликнете върху място, за да промените кой седи там.</p>
             </div>
 
             <div className="office-seats-container">

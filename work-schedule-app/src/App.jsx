@@ -12,7 +12,7 @@ import Login from './pages/Login';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, isAdmin } = useAuth();
 
   // Показваме loading screen докато проверяваме дали потребителят е логнат
   if (loading) {
@@ -47,7 +47,12 @@ function AppContent() {
         {currentPage === 'calendar' && <Calendar />}
         {currentPage === 'seats' && <Seats />}
         {currentPage === 'events' && <Events />}
-        {currentPage === 'admin' && <Admin />}
+        {currentPage === 'admin' && isAdmin && <Admin />}
+        {currentPage === 'admin' && !isAdmin && (
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+            <h2>🚫 Нямате достъп до тази страница</h2>
+          </div>
+        )}
       </main>
       <BottomNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
     </div>

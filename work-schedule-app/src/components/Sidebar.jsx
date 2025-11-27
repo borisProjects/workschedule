@@ -45,6 +45,17 @@ function Sidebar({ currentPage, setCurrentPage }) {
                     <span>Events</span>
                 </div>
             </nav>
+
+            <div style={{
+                marginTop: 'auto',
+                padding: '1rem',
+                textAlign: 'center',
+                fontSize: '0.7rem',
+                color: 'var(--text-secondary)',
+                opacity: 0.7
+            }}>
+                powered by Bobi
+            </div>
         </div>
     );
 }
