@@ -69,6 +69,7 @@ function Home({ setCurrentPage }) {
                 }
 
                 const today = new Date();
+                today.setHours(0, 0, 0, 0); // Зануляване на часа за коректно сравнение
                 const currentYear = today.getFullYear();
                 const currentMonth = today.getMonth();
                 const currentDay = today.getDate();
@@ -377,12 +378,12 @@ function Home({ setCurrentPage }) {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '1rem',
-                                borderLeft: '3px solid #f59e0b'
+                                borderLeft: `3px solid ${nextBirthday.daysUntil === 0 ? '#3b82f6' : '#f59e0b'}`
                             }}>
                                 <div style={{ 
                                     fontSize: '2rem',
                                     fontWeight: '700',
-                                    color: '#f59e0b',
+                                    color: nextBirthday.daysUntil === 0 ? '#3b82f6' : '#f59e0b',
                                     minWidth: '50px',
                                     textAlign: 'center'
                                 }}>
@@ -397,7 +398,7 @@ function Home({ setCurrentPage }) {
                                         color: 'var(--text-secondary)' 
                                     }}>
                                         {nextBirthday.date.toLocaleDateString('bg-BG', { month: 'long' })}
-                                        {nextBirthday.daysUntil === 0 && ' (днес!)'}
+                                        {nextBirthday.daysUntil === 0 && ' (Днес)'}
                                         {nextBirthday.daysUntil === 1 && ' (утре)'}
                                         {nextBirthday.daysUntil > 1 && ` (след ${nextBirthday.daysUntil} дни)`}
                                     </div>
