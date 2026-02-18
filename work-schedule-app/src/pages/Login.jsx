@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 function Login() {
@@ -111,7 +111,7 @@ function Login() {
                                 borderRadius: '12px',
                                 fontSize: '1rem',
                                 background: 'var(--secondary-bg)',
-                                color: selectedEmployee ? 'var(--text)' : 'var(--text-secondary)',
+                                color: selectedEmployee ? 'var(--text-primary)' : 'var(--text-secondary)',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 justifyContent: 'space-between',
@@ -139,7 +139,7 @@ function Login() {
                                             {selectedEmployee.charAt(0)}
                                         </div>
                                         <div>
-                                            <div style={{ fontWeight: '500', color: 'var(--text)' }}>{selectedEmployeeData?.name}</div>
+                                            <div style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{selectedEmployeeData?.name}</div>
                                             {selectedEmployeeData?.seat_number && (
                                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                                     Място {selectedEmployeeData.seat_number}
@@ -193,8 +193,8 @@ function Login() {
                                                 border: 'none',
                                                 background: 'transparent',
                                                 width: '100%',
-                                                color: 'var(--text)',
-                                                fontSize: '0.95rem',
+                                                color: 'var(--text-primary)',
+                                                fontSize: '1rem',
                                                 outline: 'none'
                                             }}
                                         />
@@ -243,7 +243,7 @@ function Login() {
                                                     {employee.name.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <div style={{ fontWeight: '500', color: 'var(--text)' }}>{employee.name}</div>
+                                                    <div style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{employee.name}</div>
                                                     {employee.seat_number && (
                                                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                                             Място {employee.seat_number}
