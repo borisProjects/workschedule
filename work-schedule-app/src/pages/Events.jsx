@@ -411,7 +411,7 @@ function Events() {
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {events.map((event) => (
-                        <div key={event.id} className="card">
+                        <div key={event.id} className="card events-card">
                             <div style={{ padding: '1.5rem' }}>
                                 {editingEvent === event.id ? (
                                     // Edit форма
@@ -758,9 +758,9 @@ function Events() {
                                             padding: isMobile ? '1rem' : '0.75rem',
                                             background: event.userVote === 'yes' 
                                                 ? 'linear-gradient(135deg, #10b981, #059669)' 
-                                                : 'var(--secondary-bg)',
-                                            color: event.userVote === 'yes' ? 'white' : 'var(--text)',
-                                            border: event.userVote === 'yes' ? 'none' : '2px solid var(--border)',
+                                                : 'var(--card-bg)',
+                                            color: event.userVote === 'yes' ? 'white' : 'var(--text-primary)',
+                                            border: event.userVote === 'yes' ? 'none' : '2px solid var(--border-color)',
                                             borderRadius: '8px',
                                             cursor: 'pointer',
                                             fontWeight: '600',
@@ -769,7 +769,18 @@ function Events() {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '0.5rem',
-                                            transition: 'all 0.3s ease'
+                                            transition: 'all 0.3s ease',
+                                            boxShadow: 'none'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isMobile) {
+                                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(16, 185, 129, 0.25)';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
                                         }}
                                     >
                                         <span>✓</span> Да
@@ -780,9 +791,9 @@ function Events() {
                                             padding: isMobile ? '1rem' : '0.75rem',
                                             background: event.userVote === 'no' 
                                                 ? 'linear-gradient(135deg, #ef4444, #dc2626)' 
-                                                : 'var(--secondary-bg)',
-                                            color: event.userVote === 'no' ? 'white' : 'var(--text)',
-                                            border: event.userVote === 'no' ? 'none' : '2px solid var(--border)',
+                                                : 'var(--card-bg)',
+                                            color: event.userVote === 'no' ? 'white' : 'var(--text-primary)',
+                                            border: event.userVote === 'no' ? 'none' : '2px solid var(--border-color)',
                                             borderRadius: '8px',
                                             cursor: 'pointer',
                                             fontWeight: '600',
@@ -791,7 +802,18 @@ function Events() {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '0.5rem',
-                                            transition: 'all 0.3s ease'
+                                            transition: 'all 0.3s ease',
+                                            boxShadow: 'none'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isMobile) {
+                                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(239, 68, 68, 0.25)';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
                                         }}
                                     >
                                         <span>✗</span> Не
@@ -802,9 +824,9 @@ function Events() {
                                             padding: isMobile ? '1rem' : '0.75rem',
                                             background: event.userVote === 'maybe' 
                                                 ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
-                                                : 'var(--secondary-bg)',
-                                            color: event.userVote === 'maybe' ? 'white' : 'var(--text)',
-                                            border: event.userVote === 'maybe' ? 'none' : '2px solid var(--border)',
+                                                : 'var(--card-bg)',
+                                            color: event.userVote === 'maybe' ? 'white' : 'var(--text-primary)',
+                                            border: event.userVote === 'maybe' ? 'none' : '2px solid var(--border-color)',
                                             borderRadius: '8px',
                                             cursor: 'pointer',
                                             fontWeight: '600',
@@ -813,7 +835,18 @@ function Events() {
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '0.5rem',
-                                            transition: 'all 0.3s ease'
+                                            transition: 'all 0.3s ease',
+                                            boxShadow: 'none'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isMobile) {
+                                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                                e.currentTarget.style.boxShadow = '0 8px 20px rgba(245, 158, 11, 0.25)';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = 'none';
                                         }}
                                     >
                                         <span>?</span> Обмислям
@@ -831,4 +864,3 @@ function Events() {
 }
 
 export default Events;
-

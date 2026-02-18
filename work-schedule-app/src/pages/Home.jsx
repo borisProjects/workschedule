@@ -3,15 +3,17 @@ import { getDayStatus, getStatusDescription, formatDate, getNextOfficeDays } fro
 import { OFFICE_SEATS } from '../data/constants';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 function Home({ setCurrentPage }) {
     const { isAdmin } = useAuth();
+    const { isDark, toggleTheme } = useTheme();
     const today = new Date();
     const status = getDayStatus(today);
     const nextOfficeDays = getNextOfficeDays(today, 2);
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(true);
-    const [nextBirthday, setNextBirthday] = useState(null);
+    const [nextBirthdays, setNextBirthdays] = useState([]);
     const [loadingBirthday, setLoadingBirthday] = useState(true);
     const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
 
@@ -50,9 +52,9 @@ function Home({ setCurrentPage }) {
         loadUpcomingEvents();
     }, []);
 
-    // Зареждане на служители и намиране на следващия рожден ден
+    // Зареждане на служители и намиране на следващите 2 рожденика
     useEffect(() => {
-        const findNextBirthday = async () => {
+        const findNextBirthdays = async () => {
             try {
                 const { data, error } = await supabase
                     .from('employees')
@@ -63,7 +65,7 @@ function Home({ setCurrentPage }) {
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
-                    setNextBirthday(null);
+                    setNextBirthdays([]);
                     setLoadingBirthday(false);
                     return;
                 }
@@ -71,41 +73,37 @@ function Home({ setCurrentPage }) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0); // Зануляване на часа за коректно сравнение
                 const currentYear = today.getFullYear();
-                const currentMonth = today.getMonth();
-                const currentDay = today.getDate();
+                
+                const upcomingBirthdays = data
+                    .filter((employee) => employee.birthday)
+                    .map((employee) => {
+                        const birthdayDate = new Date(employee.birthday);
+                        const birthdayMonth = birthdayDate.getMonth();
+                        const birthdayDay = birthdayDate.getDate();
 
-                // Намиране на следващия рожден ден
-                let nextBirthdayData = null;
-                let minDaysUntil = Infinity;
+                        // Създаваме дата за тази година
+                        let birthdayThisYear = new Date(currentYear, birthdayMonth, birthdayDay);
 
-                data.forEach(employee => {
-                    if (!employee.birthday) return;
+                        // Ако рожден денът вече е минал тази година, вземаме следващата година
+                        if (birthdayThisYear < today) {
+                            birthdayThisYear = new Date(currentYear + 1, birthdayMonth, birthdayDay);
+                        }
 
-                    const birthdayDate = new Date(employee.birthday);
-                    const birthdayMonth = birthdayDate.getMonth();
-                    const birthdayDay = birthdayDate.getDate();
+                        const daysUntil = Math.ceil((birthdayThisYear - today) / (1000 * 60 * 60 * 24));
 
-                    // Създаваме дата за тази година
-                    let birthdayThisYear = new Date(currentYear, birthdayMonth, birthdayDay);
-                    
-                    // Ако рожден денът вече е минал тази година, вземаме следващата година
-                    if (birthdayThisYear < today) {
-                        birthdayThisYear = new Date(currentYear + 1, birthdayMonth, birthdayDay);
-                    }
-
-                    const daysUntil = Math.ceil((birthdayThisYear - today) / (1000 * 60 * 60 * 24));
-
-                    if (daysUntil < minDaysUntil) {
-                        minDaysUntil = daysUntil;
-                        nextBirthdayData = {
+                        return {
                             name: employee.name,
                             date: birthdayThisYear,
-                            daysUntil: daysUntil
+                            daysUntil
                         };
-                    }
-                });
+                    })
+                    .sort((a, b) => {
+                        if (a.daysUntil !== b.daysUntil) return a.daysUntil - b.daysUntil;
+                        return a.name.localeCompare(b.name, 'bg');
+                    })
+                    .slice(0, 2);
 
-                setNextBirthday(nextBirthdayData);
+                setNextBirthdays(upcomingBirthdays);
                 setLoadingBirthday(false);
             } catch (error) {
                 console.error('Грешка при зареждане на рождени дни:', error);
@@ -113,7 +111,7 @@ function Home({ setCurrentPage }) {
             }
         };
 
-        findNextBirthday();
+        findNextBirthdays();
     }, []);
 
     const { logout } = useAuth();
@@ -122,9 +120,40 @@ function Home({ setCurrentPage }) {
         <div className="fade-in">
             <div className="content-header" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', position: 'relative', gap: '1rem' }}>
                 <h1 style={{ margin: 0, flex: '0 0 auto', lineHeight: '1.2' }}>🪰 Dashboard</h1>
-                <button
-                    onClick={logout}
-                    style={{
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <button
+                        onClick={toggleTheme}
+                        style={{
+                            background: 'var(--card-bg)',
+                            color: 'var(--text-primary)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '8px',
+                            width: '40px',
+                            height: '40px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.2rem',
+                            transition: 'all 0.2s ease',
+                            boxShadow: 'var(--shadow)',
+                            flexShrink: 0
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = 'var(--shadow-hover)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = 'var(--shadow)';
+                        }}
+                        title={isDark ? "Светъл режим" : "Тъмен режим"}
+                    >
+                        {isDark ? '☀️' : '🌙'}
+                    </button>
+                    <button
+                        onClick={logout}
+                        style={{
                         background: 'linear-gradient(135deg, #ef4444, #dc2626)',
                         color: 'white',
                         border: 'none',
@@ -153,6 +182,7 @@ function Home({ setCurrentPage }) {
                 >
                     <i className="fas fa-sign-out-alt"></i>
                 </button>
+                </div>
             </div>
 
             <div className="status-info" style={{ 
@@ -370,39 +400,46 @@ function Home({ setCurrentPage }) {
                             <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                                 ⏳ Зареждане...
                             </div>
-                        ) : nextBirthday ? (
-                            <div style={{ 
-                                background: 'var(--secondary-bg)',
-                                padding: '1rem',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                borderLeft: `3px solid ${nextBirthday.daysUntil === 0 ? '#3b82f6' : '#f59e0b'}`
-                            }}>
-                                <div style={{ 
-                                    fontSize: '2rem',
-                                    fontWeight: '700',
-                                    color: nextBirthday.daysUntil === 0 ? '#3b82f6' : '#f59e0b',
-                                    minWidth: '50px',
-                                    textAlign: 'center'
-                                }}>
-                                    {nextBirthday.date.getDate()}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: '600', fontSize: '1rem' }}>
-                                        {nextBirthday.name}
+                        ) : nextBirthdays.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {nextBirthdays.map((birthday, index) => (
+                                    <div 
+                                        key={`${birthday.name}-${index}`}
+                                        style={{ 
+                                            background: 'var(--secondary-bg)',
+                                            padding: '1rem',
+                                            borderRadius: '8px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '1rem',
+                                            borderLeft: `3px solid ${birthday.daysUntil === 0 ? '#3b82f6' : '#f59e0b'}`
+                                        }}
+                                    >
+                                        <div style={{ 
+                                            fontSize: '2rem',
+                                            fontWeight: '700',
+                                            color: birthday.daysUntil === 0 ? '#3b82f6' : '#f59e0b',
+                                            minWidth: '50px',
+                                            textAlign: 'center'
+                                        }}>
+                                            {birthday.date.getDate()}
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: '600', fontSize: '1rem' }}>
+                                                {birthday.name}
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: '0.85rem', 
+                                                color: 'var(--text-secondary)' 
+                                            }}>
+                                                {birthday.date.toLocaleDateString('bg-BG', { month: 'long' })}
+                                                {birthday.daysUntil === 0 && ' (Днес)'}
+                                                {birthday.daysUntil === 1 && ' (утре)'}
+                                                {birthday.daysUntil > 1 && ` (след ${birthday.daysUntil} дни)`}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div style={{ 
-                                        fontSize: '0.85rem', 
-                                        color: 'var(--text-secondary)' 
-                                    }}>
-                                        {nextBirthday.date.toLocaleDateString('bg-BG', { month: 'long' })}
-                                        {nextBirthday.daysUntil === 0 && ' (Днес)'}
-                                        {nextBirthday.daysUntil === 1 && ' (утре)'}
-                                        {nextBirthday.daysUntil > 1 && ` (след ${nextBirthday.daysUntil} дни)`}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         ) : (
                             <div style={{ textAlign: 'center', padding: '2rem' }}>
@@ -420,4 +457,3 @@ function Home({ setCurrentPage }) {
 }
 
 export default Home;
-

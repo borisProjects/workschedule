@@ -44,6 +44,117 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        [data-theme='dark'] {
+            /* Main Colors - Dark Blue Theme */
+            --text: #000000;
+            --background: #0f172a;
+            --primary: #34d977;
+            --secondary: #1e293b;
+            --accent: #63e1e2;
+
+            /* Background Layers */
+            --primary-bg: #0f172a;
+            --secondary-bg: #1e293b;
+            --card-bg: #1e293b;
+            --sidebar-bg: #0f172a;
+
+            /* Text Colors */
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            /* Border & Divider Colors */
+            --border-color: #334155;
+            --border-light: #475569;
+
+            /* Calendar Status Colors */
+            --office-color: #34d977;
+            --remote-color: #94ebdd;
+            --weekend-color: #334155;
+
+            /* Hover & Interactive States */
+            --hover-bg: #334155;
+            --active-bg: #475569;
+
+            /* Shadows */
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme='dark'] body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary);
+        }
+
+        [data-theme='dark'] .sidebar {
+            background: var(--sidebar-bg);
+            border-right-color: var(--border-color);
+        }
+
+        [data-theme='dark'] .card {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        [data-theme='dark'] .card:hover {
+            background: var(--secondary-bg);
+            border-color: var(--primary);
+        }
+
+        [data-theme='dark'] .calendar-container {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        [data-theme='dark'] .calendar-day {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        [data-theme='dark'] .calendar-day:hover {
+            background: var(--active-bg);
+            border-color: var(--primary);
+        }
+
+        [data-theme='dark'] .calendar-day.weekend {
+            background: var(--weekend-color);
+            color: var(--text-muted);
+        }
+
+        [data-theme='dark'] .nav-btn,
+        [data-theme='dark'] .icon-btn {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        [data-theme='dark'] .nav-btn:hover,
+        [data-theme='dark'] .icon-btn:hover {
+            background: var(--active-bg);
+        }
+
+        [data-theme='dark'] .today-btn {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border-color: var(--primary);
+        }
+
+        [data-theme='dark'] .today-btn:hover {
+            background: var(--active-bg);
+        }
+
+        [data-theme='dark'] .search-input {
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        [data-theme='dark'] .office-seat:has(.seat-empty) {
+            background: var(--secondary-bg);
+            border-color: var(--border-color);
+        }
+
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #f6fdf9 0%, #eef9f3 50%, #e8f8f0 100%);
@@ -190,7 +301,7 @@
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background: #34d977;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -361,6 +472,23 @@
         
         .card:hover::before {
             opacity: 1;
+        }
+
+        /* Events cards: disable full-card hover lift, keep interactions on inner buttons only */
+        .events-card:hover {
+            transform: none;
+            border-color: var(--border-color);
+            box-shadow: var(--shadow);
+            background: linear-gradient(145deg, #ffffff 0%, #fafffe 100%);
+        }
+
+        .events-card:hover::before {
+            opacity: 0;
+        }
+
+        [data-theme='dark'] .events-card:hover {
+            background: var(--card-bg);
+            border-color: var(--border-color);
         }
 
         .card-header {
@@ -548,21 +676,21 @@
         }
         
         .calendar-day.office { 
-            background: linear-gradient(145deg, var(--primary) 0%, #2cc96a 100%);
+            background: var(--office-color);
             color: var(--text);
             font-weight: 600;
             border-color: var(--primary);
         }
         
         .calendar-day.remote { 
-            background: linear-gradient(145deg, var(--secondary) 0%, #87e4d5 100%);
+            background: var(--remote-color);
             color: var(--text);
             font-weight: 600;
             border-color: var(--secondary);
         }
         
         .calendar-day.weekend { 
-            background: linear-gradient(145deg, var(--weekend-color) 0%, #dff4ea 100%);
+            background: var(--weekend-color);
             color: var(--text-secondary);
         }
 
@@ -630,7 +758,7 @@
         }
 
         .office-seat {
-            background: linear-gradient(135deg, var(--primary) 0%, #2cc96a 100%);
+            background: var(--primary);
             border: 3px solid var(--primary);
             border-radius: var(--border-radius);
             padding: 1.5rem 1rem;
@@ -660,7 +788,7 @@
             transform: translateY(-6px) scale(1.02);
             box-shadow: 0 12px 28px rgba(52, 217, 119, 0.4);
             border-color: var(--accent);
-            background: linear-gradient(135deg, #2cc96a 0%, #24b85d 100%);
+            background: #2cc96a;
         }
 
         .seat-number {
@@ -685,7 +813,7 @@
         }
         
         .office-seat:has(.seat-empty) {
-            background: linear-gradient(135deg, #e8f8f0 0%, #dff4ea 100%);
+            background: #e8f8f0;
             border-color: var(--border-color);
             opacity: 0.6;
         }
