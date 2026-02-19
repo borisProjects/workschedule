@@ -74,7 +74,12 @@ export const TeamLayoutSection = ({ layoutId }: TeamLayoutSectionProps) => {
     const handleDragEnd = useCallback(async () => {
         if (!isAdmin) return;
         setActiveSeatToken(null);
-        await persistOrder(layoutId);
+        try {
+            await persistOrder(layoutId);
+        } catch (error) {
+            console.error('Грешка при запазване на подредбата:', error);
+            alert('Подредбата не беше запазена. Моля, опитайте отново.');
+        }
     }, [isAdmin, layoutId, persistOrder]);
 
     const handleDragCancel = useCallback(() => {

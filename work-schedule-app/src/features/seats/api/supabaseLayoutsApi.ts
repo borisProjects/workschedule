@@ -29,36 +29,73 @@ type DbEmployee = {
 };
 
 const MAIN_LAYOUT_ID = 'office-main';
+const EMPLOYEE_CACHE_TTL_MS = 5000;
 
 const parseSeatCode = (value: string) => {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const detectMultiLayoutSchema = async () => {
+const detectMultiLayoutSchemaProbe = async () => {
     const { error } = await supabase.from('seat_layouts').select('id').limit(1);
     if (!error) return true;
     if (error.code === '42P01') return false;
     throw error;
 };
 
+let multiLayoutSchemaPromise: Promise<boolean> | null = null;
+const detectMultiLayoutSchema = async () => {
+    if (!multiLayoutSchemaPromise) {
+        multiLayoutSchemaPromise = detectMultiLayoutSchemaProbe();
+    }
+    return multiLayoutSchemaPromise;
+};
+
+let employeesBySeatCache: { value: Map<string, DbEmployee>; expiresAt: number } | null = null;
+let employeesBySeatInFlight: Promise<Map<string, DbEmployee>> | null = null;
+const invalidateEmployeesBySeatCache = () => {
+    employeesBySeatCache = null;
+};
+
 const loadEmployeesBySeat = async () => {
-    const { data, error } = await supabase
-        .from('employees')
-        .select('id,name,seat_number,is_active')
-        .eq('is_active', true)
-        .not('seat_number', 'is', null);
+    const now = Date.now();
+    if (employeesBySeatCache && employeesBySeatCache.expiresAt > now) {
+        return employeesBySeatCache.value;
+    }
 
-    if (error) throw error;
+    if (employeesBySeatInFlight) {
+        return employeesBySeatInFlight;
+    }
 
-    const map = new Map<string, DbEmployee>();
-    (data ?? []).forEach((employee) => {
-        if (employee.seat_number) {
-            map.set(employee.seat_number, employee as DbEmployee);
-        }
-    });
+    employeesBySeatInFlight = (async () => {
+        const { data, error } = await supabase
+            .from('employees')
+            .select('id,name,seat_number,is_active')
+            .eq('is_active', true)
+            .not('seat_number', 'is', null);
 
-    return map;
+        if (error) throw error;
+
+        const map = new Map<string, DbEmployee>();
+        (data ?? []).forEach((employee) => {
+            if (employee.seat_number) {
+                map.set(employee.seat_number, employee as DbEmployee);
+            }
+        });
+
+        employeesBySeatCache = {
+            value: map,
+            expiresAt: Date.now() + EMPLOYEE_CACHE_TTL_MS
+        };
+
+        return map;
+    })();
+
+    try {
+        return await employeesBySeatInFlight;
+    } finally {
+        employeesBySeatInFlight = null;
+    }
 };
 
 const assignEmployeeToSeat = async (seatNumber: string, assigneeName?: string | null) => {
@@ -71,7 +108,10 @@ const assignEmployeeToSeat = async (seatNumber: string, assigneeName?: string | 
 
     if (clearSeatError) throw clearSeatError;
 
-    if (!normalizedName) return;
+    if (!normalizedName) {
+        invalidateEmployeesBySeatCache();
+        return;
+    }
 
     const { data: existing, error: findError } = await supabase
         .from('employees')
@@ -89,6 +129,7 @@ const assignEmployeeToSeat = async (seatNumber: string, assigneeName?: string | 
             .eq('id', existing.id);
 
         if (updateError) throw updateError;
+        invalidateEmployeesBySeatCache();
         return;
     }
 
@@ -99,6 +140,7 @@ const assignEmployeeToSeat = async (seatNumber: string, assigneeName?: string | 
     });
 
     if (insertError) throw insertError;
+    invalidateEmployeesBySeatCache();
 };
 
 const clearSeatAssignment = async (seatNumber: string) => {
@@ -108,6 +150,7 @@ const clearSeatAssignment = async (seatNumber: string) => {
         .eq('seat_number', seatNumber);
 
     if (error) throw error;
+    invalidateEmployeesBySeatCache();
 };
 
 const mapLayout = (layout: DbLayout): Layout => ({
@@ -223,6 +266,7 @@ export const supabaseLayoutsApi: LayoutsApi = {
                 .in('seat_number', seatNumbers);
 
             if (clearEmployeesError) throw clearEmployeesError;
+            invalidateEmployeesBySeatCache();
         }
 
         const { error } = await supabase.from('seat_layouts').delete().eq('id', layoutId);
@@ -260,25 +304,30 @@ export const supabaseLayoutsApi: LayoutsApi = {
         const isMulti = await detectMultiLayoutSchema();
 
         const temporaryOffset = 10000;
-        for (const item of seatsWithPositionIndex) {
-            const tempQuery = supabase
-                .from('seat_layout_items')
-                .update({ position_index: item.positionIndex + temporaryOffset })
-                .eq('id', item.id);
 
-            const { error: tempError } = isMulti ? await tempQuery.eq('layout_id', layoutId) : await tempQuery;
-            if (tempError) throw tempError;
-        }
+        await Promise.all(
+            seatsWithPositionIndex.map(async (item) => {
+                const tempQuery = supabase
+                    .from('seat_layout_items')
+                    .update({ position_index: item.positionIndex + temporaryOffset })
+                    .eq('id', item.id);
 
-        for (const item of seatsWithPositionIndex) {
-            const finalQuery = supabase
-                .from('seat_layout_items')
-                .update({ position_index: item.positionIndex })
-                .eq('id', item.id);
+                const { error: tempError } = isMulti ? await tempQuery.eq('layout_id', layoutId) : await tempQuery;
+                if (tempError) throw tempError;
+            })
+        );
 
-            const { error: finalError } = isMulti ? await finalQuery.eq('layout_id', layoutId) : await finalQuery;
-            if (finalError) throw finalError;
-        }
+        await Promise.all(
+            seatsWithPositionIndex.map(async (item) => {
+                const finalQuery = supabase
+                    .from('seat_layout_items')
+                    .update({ position_index: item.positionIndex })
+                    .eq('id', item.id);
+
+                const { error: finalError } = isMulti ? await finalQuery.eq('layout_id', layoutId) : await finalQuery;
+                if (finalError) throw finalError;
+            })
+        );
     },
 
     async createSeat(layoutId: string, payload: CreateSeatPayload) {
@@ -442,6 +491,7 @@ export const supabaseLayoutsApi: LayoutsApi = {
             .eq('seat_number', seat.seat_number);
 
         if (clearEmployeeError) throw clearEmployeeError;
+        invalidateEmployeesBySeatCache();
 
         const { error: deleteError } = await supabase.from('seat_layout_items').delete().eq('id', seatId);
         if (deleteError) throw deleteError;

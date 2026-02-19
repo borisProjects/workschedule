@@ -607,3 +607,14 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Keep seats content visible above fixed mobile bottom navigation */
+@media (max-width: 899px) {
+    .seats-screen {
+        padding-bottom: calc(130px + env(safe-area-inset-bottom));
+    }
+
+    .seats-screen .team-layouts-list {
+        padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+}

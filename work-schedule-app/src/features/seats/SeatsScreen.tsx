@@ -23,7 +23,7 @@ export const SeatsScreen = () => {
 
     if (loading) {
         return (
-            <div className="fade-in" style={{ textAlign: 'center', padding: '4rem' }}>
+            <div className="fade-in seats-screen" style={{ textAlign: 'center', padding: '4rem' }}>
                 Зареждане на местата...
             </div>
         );
@@ -31,14 +31,14 @@ export const SeatsScreen = () => {
 
     if (error) {
         return (
-            <div className="fade-in" style={{ textAlign: 'center', padding: '4rem' }}>
+            <div className="fade-in seats-screen" style={{ textAlign: 'center', padding: '4rem' }}>
                 {error}
             </div>
         );
     }
 
     return (
-        <div className="fade-in">
+        <div className="fade-in seats-screen">
             <div className="content-header">
                 <div>
                     <h1>Офис места</h1>
