@@ -728,7 +728,7 @@ function Events() {
                                         <h3 style={{ 
                                             fontSize: '1rem', 
                                             marginBottom: '1rem',
-                                            color: 'var(--text)',
+                                            color: 'var(--text-primary)',
                                             fontWeight: '600'
                                         }}>
                                             👥 Кой как е гласувал ({event.totalVotes} общо)

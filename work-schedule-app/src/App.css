@@ -46,7 +46,7 @@
 
         [data-theme='dark'] {
             /* Main Colors - Dark Blue Theme */
-            --text: #ffffff;
+            --text: #000000;
             --background: #0f172a;
             --primary: #34d977;
             --secondary: #1e293b;
