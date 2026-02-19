@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -13,7 +13,7 @@ function Events() {
     const [error, setError] = useState('');
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-    // Ð¡Ð»ÑƒÑˆÐ°Ñ‚ÐµÐ» Ð·Ð° Ð¿Ñ€Ð¾Ð¼ÑÐ½Ð° Ð½Ð° Ñ€Ð°Ð·Ð¼ÐµÑ€Ð° Ð½Ð° Ð¿Ñ€Ð¾Ð·Ð¾Ñ€ÐµÑ†Ð°
+    // Слђ��а�ел за пѬомяна на ѬазмеѬа на пѬозоѬе� а
     useEffect(() => {
         const handleResize = () => {
             setIsMobile(window.innerWidth <= 768);
@@ -23,10 +23,10 @@ function Events() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Ð—Ð°Ñ€ÐµÐ¶Ð´Ð°Ð½Ðµ Ð½Ð° Ð²ÑÐ¸Ñ‡ÐºÐ¸ ÑÑŠÐ±Ð¸Ñ‚Ð¸Ñ Ñ Ð³Ð»Ð°ÑÐ¾Ð²Ðµ
+    // �аѬеждане на вси�!ки с�`би�ия с гласове
     const loadEvents = async () => {
         try {
-            // ÐžÐ¿Ñ‚Ð¸Ð¼Ð¸Ð·Ð¸Ñ€Ð°Ð½Ð° Ð·Ð°ÑÐ²ÐºÐ°: Ð·Ð°Ñ€ÐµÐ¶Ð´Ð°Ð¼Ðµ ÑÑŠÐ±Ð¸Ñ‚Ð¸ÑÑ‚Ð° Ð¸ Ð³Ð»Ð°ÑÐ¾Ð²ÐµÑ‚Ðµ Ð½Ð°Ð²ÐµÐ´Ð½ÑŠÐ¶
+            // �~п�имизиѬана заявка: заѬеждаме с�`би�ия�а и гласове�е наведн�`ж
             const { data: eventsData, error: eventsError } = await supabase
                 .from('events')
                 .select(`
@@ -42,7 +42,7 @@ function Events() {
 
             if (eventsError) throw eventsError;
 
-            // ÐžÐ±Ñ€Ð°Ð±Ð¾Ñ‚Ð²Ð°Ð¼Ðµ Ð´Ð°Ð½Ð½Ð¸Ñ‚Ðµ Ð»Ð¾ÐºÐ°Ð»Ð½Ð¾
+            // �~бѬабо�ваме данни�е локално
             const eventsWithVotes = eventsData.map(event => {
                 const votesData = event.votes || [];
                 
@@ -50,7 +50,7 @@ function Events() {
                 const noCount = votesData.filter(v => v.vote_type === 'no').length;
                 const maybeCount = votesData.filter(v => v.vote_type === 'maybe').length;
 
-                // ÐÐ°Ð¼Ð¸Ñ€Ð°Ð¼Ðµ Ð³Ð»Ð°ÑÐ° Ð½Ð° Ñ‚ÐµÐºÑƒÑ‰Ð¸Ñ Ð¿Ð¾Ñ‚Ñ€ÐµÐ±Ð¸Ñ‚ÐµÐ»
+                // НамиѬаме гласа на �екђ�0ия по�Ѭеби�ел
                 const userVote = votesData.find(v => v.employee_id === user?.id);
 
                 return {
@@ -67,8 +67,8 @@ function Events() {
             setEvents(eventsWithVotes);
             setLoading(false);
         } catch (error) {
-            console.error('Грешка при зареждане на събития:', error);
-            setError('Грешка при зареждане на събития');
+            console.error('�Ѭе��ка пѬи заѬеждане на с�`би�ия:', error);
+            setError('�Ѭе��ка пѬи заѬеждане на с�`би�ия');
             setLoading(false);
         }
     };
@@ -99,7 +99,7 @@ function Events() {
                         event_id: eventId,
                         employee_id: user.id,
                         vote_type: nextVoteType,
-                        employee: { name: user?.name || 'Вие' }
+                        employee: { name: user?.name || '85' }
                     });
                 }
 
@@ -120,12 +120,12 @@ function Events() {
         );
     };
 
-    // Ð”Ð¾Ð±Ð°Ð²ÑÐ½Ðµ Ð½Ð° Ð½Ð¾Ð²Ð¾ ÑÑŠÐ±Ð¸Ñ‚Ð¸Ðµ
+    // �обавяне на ново с�`би�ие
     const handleAddEvent = async (e) => {
         e.preventDefault();
         
         if (!newEvent.title || !newEvent.event_date) {
-            setError('Моля, попълнете всички полета');
+            setError('�Sоля, поп�`лне�е вси�!ки поле�а');
             return;
         }
 
@@ -145,19 +145,19 @@ function Events() {
             setError('');
             await loadEvents();
         } catch (error) {
-            console.error('Грешка при добавяне на събитие:', error);
-            setError('Грешка при добавяне на събитие');
+            console.error('�Ѭе��ка пѬи добавяне на с�`би�ие:', error);
+            setError('�Ѭе��ка пѬи добавяне на с�`би�ие');
         }
     };
 
-    // Ð˜Ð·Ñ‚Ñ€Ð¸Ð²Ð°Ð½Ðµ Ð½Ð° ÑÑŠÐ±Ð¸Ñ‚Ð¸Ðµ
+    // ��з�Ѭиване на с�`би�ие
     const handleDeleteEvent = async (eventId) => {
-        if (!confirm('Сигурни ли сте, че искате да изтриете това събитие?')) {
+        if (!confirm('СигђѬни ли с�е, �!е иска�е да из�Ѭие�е �ова с�`би�ие?')) {
             return;
         }
 
         try {
-            // ÐŸÑŠÑ€Ð²Ð¾ Ð¸Ð·Ñ‚Ñ€Ð¸Ð²Ð°Ð¼Ðµ Ð²ÑÐ¸Ñ‡ÐºÐ¸ Ð³Ð»Ð°ÑÐ¾Ð²Ðµ Ð·Ð° Ñ‚Ð¾Ð²Ð° ÑÑŠÐ±Ð¸Ñ‚Ð¸Ðµ
+            // �x�`Ѭво из�Ѭиваме вси�!ки гласове за �ова с�`би�ие
             const { error: votesError } = await supabase
                 .from('votes')
                 .delete()
@@ -165,7 +165,7 @@ function Events() {
 
             if (votesError) throw votesError;
 
-            // Ð¡Ð»ÐµÐ´ Ñ‚Ð¾Ð²Ð° Ð¸Ð·Ñ‚Ñ€Ð¸Ð²Ð°Ð¼Ðµ ÑÑŠÐ±Ð¸Ñ‚Ð¸ÐµÑ‚Ð¾
+            // След �ова из�Ѭиваме с�`би�ие�о
             const { error: eventError } = await supabase
                 .from('events')
                 .delete()
@@ -175,34 +175,34 @@ function Events() {
 
             await loadEvents();
         } catch (error) {
-            console.error('Грешка при изтриване на събитие:', error);
-            setError('Грешка при изтриване на събитие: ' + error.message);
+            console.error('�Ѭе��ка пѬи из�Ѭиване на с�`би�ие:', error);
+            setError('�Ѭе��ка пѬи из�Ѭиване на с�`би�ие: ' + error.message);
         }
     };
 
-    // Ð—Ð°Ð¿Ð¾Ñ‡Ð²Ð°Ð½Ðµ Ð½Ð° Ñ€ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð°Ð½Ðµ
+    // �апо�!ване на Ѭедак�иѬане
     const handleStartEdit = (event) => {
         setEditingEvent(event.id);
         setEditForm({
             title: event.title,
             event_date: event.event_date
         });
-        setShowAddForm(false); // Ð—Ð°Ñ‚Ð²Ð°Ñ€ÑÐ¼Ðµ Add Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚Ð° Ð°ÐºÐ¾ Ðµ Ð¾Ñ‚Ð²Ð¾Ñ€ÐµÐ½Ð°
+        setShowAddForm(false); // �а�ваѬяме Add �оѬма�а ако е о�воѬена
         setError('');
     };
 
-    // Отказ Ð¾Ñ‚ Ñ€ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð°Ð½Ðµ
+    // �~�каз о� Ѭедак�иѬане
     const handleCancelEdit = () => {
         setEditingEvent(null);
         setEditForm({ title: '', event_date: '' });
     };
 
-    // ÐžÐ±Ð½Ð¾Ð²ÑÐ²Ð°Ð½Ðµ Ð½Ð° ÑÑŠÐ±Ð¸Ñ‚Ð¸Ðµ
+    // �~бновяване на с�`би�ие
     const handleUpdateEvent = async (e) => {
         e.preventDefault();
         
         if (!editForm.title || !editForm.event_date) {
-            setError('Моля, попълнете всички полета');
+            setError('�Sоля, поп�`лне�е вси�!ки поле�а');
             return;
         }
 
@@ -222,12 +222,12 @@ function Events() {
             setError('');
             await loadEvents();
         } catch (error) {
-            console.error('Грешка при обновяване на събитие:', error);
-            setError('Грешка при обновяване на събитие');
+            console.error('�Ѭе��ка пѬи обновяване на с�`би�ие:', error);
+            setError('�Ѭе��ка пѬи обновяване на с�`би�ие');
         }
     };
 
-    // Гласуване с toggle функционалност
+    // ;0AC20=5 A toggle DC=:F8>=0;=>AB
     const handleVote = async (eventId, voteType) => {
         try {
             const event = events.find((item) => item.id === eventId);
@@ -266,19 +266,19 @@ function Events() {
 
             applyVoteLocally(eventId, voteType);
         } catch (error) {
-            console.error('Грешка при гласуване:', error);
-            setError('Грешка при гласуване');
+            console.error('@5H:0 ?@8 3;0AC20=5:', error);
+            setError('@5H:0 ?@8 3;0AC20=5');
         }
     };
 
-    // Ð¤Ð¾Ñ€Ð¼Ð°Ñ‚Ð¸Ñ€Ð°Ð½Ðµ Ð½Ð° Ð´Ð°Ñ‚Ð°
+    // ФоѬма�иѬане на да�а
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const options = { day: 'numeric', month: 'long', year: 'numeric' };
         return date.toLocaleDateString('bg-BG', options);
     };
 
-    // ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð´Ð°Ð»Ð¸ ÑÑŠÐ±Ð¸Ñ‚Ð¸ÐµÑ‚Ð¾ Ðµ Ð¼Ð¸Ð½Ð°Ð»Ð¾
+    // �xѬовеѬка дали с�`би�ие�о е минало
     const isPastEvent = (dateString) => {
         const eventDate = new Date(dateString);
         const today = new Date();
@@ -289,9 +289,9 @@ function Events() {
     if (loading) {
         return (
             <div className="fade-in" style={{ textAlign: 'center', padding: '4rem' }}>
-                <div style={{ fontSize: '3rem' }}>â³</div>
+                <div style={{ fontSize: '3rem' }}>⏳</div>
                 <div style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginTop: '1rem' }}>
-                    Зареждане на събития...
+                    �аѬеждане на с�`би�ия...
                 </div>
             </div>
         );
@@ -314,7 +314,7 @@ function Events() {
                     margin: 0,
                     fontSize: isMobile ? '1.75rem' : '2rem',
                     textAlign: isMobile ? 'center' : 'left'
-                }}>🎉 Евенти</h1>
+                }}>�x}0 �"вен�и</h1>
                 <button 
                     onClick={() => setShowAddForm(!showAddForm)}
                     style={{
@@ -352,7 +352,7 @@ function Events() {
                     }}
                 >
                     <i className={`fas fa-${showAddForm ? 'times' : 'plus'}`} style={{ fontSize: '1.1rem' }}></i>
-                    <span>{showAddForm ? 'Отказ' : 'Добави събитие'}</span>
+                    <span>{showAddForm ? '�~�каз' : '�обави с�`би�ие'}</span>
                 </button>
             </div>
 
@@ -369,22 +369,22 @@ function Events() {
                 </div>
             )}
 
-            {/* Ð¤Ð¾Ñ€Ð¼ÑƒÐ»ÑÑ€ Ð·Ð° Ð´Ð¾Ð±Ð°Ð²ÑÐ½Ðµ Ð½Ð° ÑÑŠÐ±Ð¸Ñ‚Ð¸Ðµ */}
+            {/* ФоѬмђляѬ за добавяне на с�`би�ие */}
             {showAddForm && (
                 <div className="card" style={{ marginBottom: '2rem' }}>
                     <div className="card-header">
-                        <h2 className="card-title">➕ Ново събитие</h2>
+                        <h2 className="card-title">�~" Ново с�`би�ие</h2>
                     </div>
                     <form onSubmit={handleAddEvent} style={{ padding: '1.5rem' }}>
                         <div style={{ marginBottom: '1rem' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                                Име на събитието
+                                ��ме на с�`би�ие�о
                             </label>
                             <input
                                 type="text"
                                 value={newEvent.title}
                                 onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                                placeholder="напр. Коледна партита, Team Building..."
+                                placeholder="напѬ. �aоледна паѬ�и�а, Team Building..."
                                 required
                                 style={{
                                     width: '100%',
@@ -399,7 +399,7 @@ function Events() {
                         </div>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                                Дата на събитието
+                                �а�а на с�`би�ие�о
                             </label>
                             <input
                                 type="date"
@@ -431,19 +431,19 @@ function Events() {
                                 cursor: 'pointer'
                             }}
                         >
-                            ✨ Създай събитие
+                            �S� С�`здай с�`би�ие
                         </button>
                     </form>
                 </div>
             )}
 
-            {/* Ð¡Ð¿Ð¸ÑÑŠÐº ÑÑŠÑ ÑÑŠÐ±Ð¸Ñ‚Ð¸Ñ */}
+            {/* Спис�`к с�`с с�`би�ия */}
             {events.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '4rem' }}>
-                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📅</div>
-                    <h2>Няма предстоящи събития</h2>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>�x&</div>
+                    <h2>Няма пѬедс�оя�0и с�`би�ия</h2>
                     <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-                        Създайте ново събитие, за да започнете!
+                        С�`здай�е ново с�`би�ие, за да запо�!не�е!
                     </p>
                 </div>
             ) : (
@@ -452,20 +452,20 @@ function Events() {
                         <div key={event.id} className="card events-card">
                             <div style={{ padding: '1.5rem' }}>
                                 {editingEvent === event.id ? (
-                                    // Edit Ñ„Ð¾Ñ€Ð¼Ð°
+                                    // Edit �оѬма
                                     <form onSubmit={handleUpdateEvent}>
                                         <h2 style={{ fontSize: '1.3rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>
-                                            ✏️ Редактиране на събитие
+                                            �S�️ Редак�иѬане на с�`би�ие
                                         </h2>
                                         <div style={{ marginBottom: '1rem' }}>
                                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                                                Име на събитието
+                                                ��ме на с�`би�ие�о
                                             </label>
                                             <input
                                                 type="text"
                                                 value={editForm.title}
                                                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                                                placeholder="напр. Коледна партита, Team Building..."
+                                                placeholder="напѬ. �aоледна паѬ�и�а, Team Building..."
                                                 required
                                                 style={{
                                                     width: '100%',
@@ -480,7 +480,7 @@ function Events() {
                                         </div>
                                         <div style={{ marginBottom: '1.5rem' }}>
                                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                                                Дата на събитието
+                                                �а�а на с�`би�ие�о
                                             </label>
                                             <input
                                                 type="date"
@@ -513,7 +513,7 @@ function Events() {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                💾 Запази промените
+                                                �x� �апази пѬомени�е
                                             </button>
                                             <button
                                                 type="button"
@@ -530,12 +530,12 @@ function Events() {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                ✖ Отказ
+                                                �S �~�каз
                                             </button>
                                         </div>
                                     </form>
                                 ) : (
-                                    // ÐÐ¾Ñ€Ð¼Ð°Ð»ÐµÐ½ Ð¸Ð·Ð³Ð»ÐµÐ´
+                                    // НоѬмален изглед
                                     <>
                                         <div style={{ 
                                             display: 'flex', 
@@ -560,7 +560,7 @@ function Events() {
                                                             borderRadius: '4px',
                                                             color: 'var(--text-secondary)'
                                                         }}>
-                                                            Минало
+                                                            �Sинало
                                                         </span>
                                                     )}
                                                 </h2>
@@ -571,8 +571,8 @@ function Events() {
                                                     gap: '1rem',
                                                     flexWrap: 'wrap'
                                                 }}>
-                                                    <span>📅 {formatDate(event.event_date)}</span>
-                                                    <span>👤 Създадено от: {event.created_by_employee?.name || 'Неизвестен'}</span>
+                                                    <span>�x& {formatDate(event.event_date)}</span>
+                                                    <span>�x� С�`здадено о�: {event.created_by_employee?.name || 'Неизвес�ен'}</span>
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -589,7 +589,7 @@ function Events() {
                                                     }}
                                                     onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
                                                     onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                                                    title="Редактирай събитие"
+                                                    title="Редак�иѬай с�`би�ие"
                                                 >
                                                     <i className="fas fa-edit"></i>
                                                 </button>
@@ -606,14 +606,14 @@ function Events() {
                                                     }}
                                                     onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
                                                     onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                                                    title="Изтрий събитие"
+                                                    title="��з�Ѭий с�`би�ие"
                                                 >
                                                     <i className="fas fa-trash"></i>
                                                 </button>
                                             </div>
                                         </div>
 
-                                {/* Ð’Ð¸Ð·ÑƒÐ°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ Ñ Ð´Ð¾Ð½ÑŠÑ‚ Ñ‡Ð°Ñ€Ñ‚ Ð¸ ÑÑ‚Ð°Ñ‚Ð¸ÑÑ‚Ð¸ÐºÐ° */}
+                                {/* �изђализа� ия с дон�`� �!аѬ� и с�а�ис�ика */}
                                 <div style={{ 
                                     display: 'grid',
                                     gridTemplateColumns: isMobile ? '1fr' : '200px 1fr',
@@ -623,7 +623,7 @@ function Events() {
                                     background: 'var(--secondary-bg)',
                                     borderRadius: '12px'
                                 }}>
-                                    {/* Ð”Ð¾Ð½ÑŠÑ‚ Ñ‡Ð°Ñ€Ñ‚ */}
+                                    {/* �он�`� �!аѬ� */}
                                     <div style={{ 
                                         display: 'flex',
                                         flexDirection: 'column',
@@ -632,7 +632,7 @@ function Events() {
                                         gap: '1rem'
                                     }}>
                                         <div style={{ position: 'relative', width: '150px', height: '150px' }}>
-                                            {/* Ð”Ð¾Ð½ÑŠÑ‚ Ñ‡Ð°Ñ€Ñ‚ Ñ CSS */}
+                                            {/* �он�`� �!аѬ� с CSS */}
                                             <svg width="150" height="150" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
                                                 {/* Background circle */}
                                                 <circle
@@ -643,7 +643,7 @@ function Events() {
                                                     stroke="var(--border)"
                                                     strokeWidth="20"
                                                 />
-                                                {/* Да (Ð·ÐµÐ»ÐµÐ½) */}
+                                                {/* �а (зелен) */}
                                                 {event.totalVotes > 0 && (
                                                     <circle
                                                         cx="50"
@@ -656,7 +656,7 @@ function Events() {
                                                         strokeDashoffset="0"
                                                     />
                                                 )}
-                                                {/* Не (Ñ‡ÐµÑ€Ð²ÐµÐ½) */}
+                                                {/* Не (�!еѬвен) */}
                                                 {event.totalVotes > 0 && event.noCount > 0 && (
                                                     <circle
                                                         cx="50"
@@ -669,7 +669,7 @@ function Events() {
                                                         strokeDashoffset={`-${(event.yesCount / event.totalVotes) * 251.2}`}
                                                     />
                                                 )}
-                                                {/* Обмислям (Ð¶ÑŠÐ»Ñ‚) */}
+                                                {/* �~бмислям (ж�`л�) */}
                                                 {event.totalVotes > 0 && event.maybeCount > 0 && (
                                                     <circle
                                                         cx="50"
@@ -683,7 +683,7 @@ function Events() {
                                                     />
                                                 )}
                                             </svg>
-                                            {/* ÐŸÑ€Ð¾Ñ†ÐµÐ½Ñ‚ Ð² Ñ†ÐµÐ½Ñ‚ÑŠÑ€Ð° */}
+                                            {/* �xѬо� ен� в � ен��`Ѭа */}
                                             <div style={{
                                                 position: 'absolute',
                                                 top: '50%',
@@ -701,16 +701,16 @@ function Events() {
                                                         : 0}%
                                                 </div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                                                    ще дойдат
+                                                    �0е дойда�
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        {/* Ð›ÐµÐ³ÐµÐ½Ð´Ð° */}
+                                        {/* �:егенда */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
                                                 <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981' }}></div>
-                                                <span style={{ fontSize: '0.85rem' }}>Да: {event.yesCount}</span>
+                                                <span style={{ fontSize: '0.85rem' }}>�а: {event.yesCount}</span>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
                                                 <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }}></div>
@@ -718,12 +718,12 @@ function Events() {
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
                                                 <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#f59e0b' }}></div>
-                                                <span style={{ fontSize: '0.85rem' }}>Обмислям: {event.maybeCount}</span>
+                                                <span style={{ fontSize: '0.85rem' }}>�~бмислям: {event.maybeCount}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Ð¡Ð¿Ð¸ÑÑŠÐº Ñ Ð³Ð»Ð°ÑÑƒÐ²Ð°Ñ‰Ð¸Ñ‚Ðµ */}
+                                    {/* Спис�`к с гласђва�0и�е */}
                                     <div>
                                         <h3 style={{ 
                                             fontSize: '1rem', 
@@ -731,7 +731,7 @@ function Events() {
                                             color: 'var(--text)',
                                             fontWeight: '600'
                                         }}>
-                                            👥 Кой как е гласувал ({event.totalVotes} общо)
+                                            �x� �aой как е гласђвал ({event.totalVotes} об�0о)
                                         </h3>
                                         {event.votes.length > 0 ? (
                                             <div style={{ 
@@ -759,15 +759,15 @@ function Events() {
                                                         }}
                                                     >
                                                         <span style={{ fontSize: '0.9rem' }}>
-                                                            {vote.employee?.name || 'Неизвестен'}
+                                                            {vote.employee?.name || 'Неизвес�ен'}
                                                         </span>
                                                         <span style={{ 
                                                             fontSize: '1.2rem',
                                                             color: vote.vote_type === 'yes' ? '#10b981' :
                                                                    vote.vote_type === 'no' ? '#ef4444' : '#f59e0b'
                                                         }}>
-                                                            {vote.vote_type === 'yes' ? '✓' :
-                                                             vote.vote_type === 'no' ? '✗' : '?'}
+                                                            {vote.vote_type === 'yes' ? '�S' :
+                                                             vote.vote_type === 'no' ? '�S' : '?'}
                                                         </span>
                                                     </div>
                                                 ))}
@@ -778,13 +778,13 @@ function Events() {
                                                 padding: '2rem',
                                                 color: 'var(--text-secondary)'
                                             }}>
-                                                Все още няма гласове
+                                                �се о�0е няма гласове
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Ð‘ÑƒÑ‚Ð¾Ð½Ð¸ Ð·Ð° Ð³Ð»Ð°ÑÑƒÐ²Ð°Ð½Ðµ */}
+                                {/* �ђ�они за гласђване */}
                                 <div style={{ 
                                     display: 'grid', 
                                     gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
@@ -821,7 +821,7 @@ function Events() {
                                             e.currentTarget.style.boxShadow = 'none';
                                         }}
                                     >
-                                        <span>✓</span> Да
+                                        <span>�S</span> �а
                                     </button>
                                     <button
                                         onClick={() => handleVote(event.id, 'no')}
@@ -854,7 +854,7 @@ function Events() {
                                             e.currentTarget.style.boxShadow = 'none';
                                         }}
                                     >
-                                        <span>✗</span> Не
+                                        <span>�S</span> Не
                                     </button>
                                     <button
                                         onClick={() => handleVote(event.id, 'maybe')}
@@ -887,7 +887,7 @@ function Events() {
                                             e.currentTarget.style.boxShadow = 'none';
                                         }}
                                     >
-                                        <span>?</span> Обмислям
+                                        <span>?</span> �~бмислям
                                     </button>
                                 </div>
                                     </>
