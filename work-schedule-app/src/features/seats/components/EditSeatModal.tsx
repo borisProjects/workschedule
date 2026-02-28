@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 
 type EditSeatModalProps = {
     isOpen: boolean;
@@ -32,6 +32,11 @@ export const EditSeatModal = ({
         return null;
     }
 
+    const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget) return;
+        onClose();
+    };
+
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
 
@@ -54,7 +59,7 @@ export const EditSeatModal = ({
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={handleOverlayClick}>
             <div className="modal-content" onClick={(event) => event.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Редакция на място - {layoutName}</h2>

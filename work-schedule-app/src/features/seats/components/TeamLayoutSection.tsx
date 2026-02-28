@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
     DndContext,
@@ -39,6 +39,7 @@ export const TeamLayoutSection = ({ layoutId }: TeamLayoutSectionProps) => {
     const addSeat = useSeatsStore((state) => state.addSeat);
     const updateSeat = useSeatsStore((state) => state.updateSeat);
     const deleteSeat = useSeatsStore((state) => state.deleteSeat);
+    const isCreateModalOpen = useSeatsStore((state) => state.isCreateModalOpen);
 
     const [activeSeatToken, setActiveSeatToken] = useState<string | null>(null);
     const [isAddSeatOpen, setIsAddSeatOpen] = useState(false);
@@ -136,6 +137,12 @@ export const TeamLayoutSection = ({ layoutId }: TeamLayoutSectionProps) => {
         [deleteSeat, isAdmin, layoutId]
     );
 
+    useEffect(() => {
+        if (!isCreateModalOpen) return;
+        setEditingSeat(null);
+        setIsAddSeatOpen(false);
+    }, [isCreateModalOpen]);
+
     if (!layout) return null;
 
     const capacity = layout.rows * layout.cols;
@@ -207,25 +214,31 @@ export const TeamLayoutSection = ({ layoutId }: TeamLayoutSectionProps) => {
                 {typeof document !== 'undefined' ? createPortal(overlayContent, document.body) : overlayContent}
             </DndContext>
 
-            {isAdmin && (
-                <AddSeatModal
-                    isOpen={isAddSeatOpen}
-                    layoutName={layout.name}
-                    onClose={handleCloseAddSeat}
-                    onSubmit={handleAddSeat}
-                />
-            )}
+            {isAdmin && typeof document !== 'undefined'
+                ? createPortal(
+                    <AddSeatModal
+                        isOpen={isAddSeatOpen}
+                        layoutName={layout.name}
+                        onClose={handleCloseAddSeat}
+                        onSubmit={handleAddSeat}
+                    />,
+                    document.body
+                )
+                : null}
 
-            {isAdmin && editingSeat && (
-                <EditSeatModal
-                    isOpen={Boolean(editingSeat)}
-                    layoutName={layout.name}
-                    initialCode={editingSeat.code}
-                    initialAssigneeName={editingSeat.assignedUser?.name ?? ''}
-                    onClose={handleCloseEditSeat}
-                    onSubmit={handleUpdateSeat}
-                />
-            )}
+            {isAdmin && editingSeat && typeof document !== 'undefined'
+                ? createPortal(
+                    <EditSeatModal
+                        isOpen={Boolean(editingSeat)}
+                        layoutName={layout.name}
+                        initialCode={editingSeat.code}
+                        initialAssigneeName={editingSeat.assignedUser?.name ?? ''}
+                        onClose={handleCloseEditSeat}
+                        onSubmit={handleUpdateSeat}
+                    />,
+                    document.body
+                )
+                : null}
         </section>
     );
 };

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type MouseEvent } from 'react';
 
 type AddSeatModalProps = {
     isOpen: boolean;
@@ -16,6 +16,11 @@ export const AddSeatModal = ({ isOpen, layoutName, onClose, onSubmit }: AddSeatM
     if (!isOpen) {
         return null;
     }
+
+    const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget) return;
+        onClose();
+    };
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -41,7 +46,7 @@ export const AddSeatModal = ({ isOpen, layoutName, onClose, onSubmit }: AddSeatM
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={handleOverlayClick}>
             <div className="modal-content" onClick={(event) => event.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Добави място - {layoutName}</h2>

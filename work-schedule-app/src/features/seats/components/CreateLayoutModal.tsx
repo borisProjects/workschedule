@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type MouseEvent } from 'react';
 
 type CreateLayoutModalProps = {
     isOpen: boolean;
@@ -16,6 +16,11 @@ export const CreateLayoutModal = ({ isOpen, onClose, onCreate }: CreateLayoutMod
     if (!isOpen) {
         return null;
     }
+
+    const handleOverlayClick = (event: MouseEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget) return;
+        onClose();
+    };
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -42,7 +47,7 @@ export const CreateLayoutModal = ({ isOpen, onClose, onCreate }: CreateLayoutMod
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={handleOverlayClick}>
             <div className="modal-content" onClick={(event) => event.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Създай layout</h2>

@@ -42,6 +42,16 @@ function Admin() {
     const [editForm, setEditForm] = useState({ name: '', seat_number: '', seat_group: 1, birthday: '' });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const filteredEmployees = employees.filter((employee) => {
+        if (!normalizedSearch) return true;
+
+        const nameMatch = (employee.name || '').toLowerCase().includes(normalizedSearch);
+        const seatMatch = (employee.seat_number || '').toLowerCase().includes(normalizedSearch);
+        return nameMatch || seatMatch;
+    });
 
     // Проверка дали потребителят е admin
     if (!isAdmin) {
@@ -426,9 +436,26 @@ function Admin() {
             {/* Списък със служители */}
             <div className="card">
                 <div className="card-header">
-                    <h2 className="card-title">👥 Служители ({employees.length} общо)</h2>
+                    <h2 className="card-title">👥 Служители ({filteredEmployees.length} от {employees.length})</h2>
                 </div>
                 <div style={{ padding: '1.5rem' }}>
+                    <div style={{ marginBottom: '1rem' }}>
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Търси по име или място..."
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                border: '2px solid var(--border)',
+                                borderRadius: '8px',
+                                fontSize: '1rem',
+                                background: 'var(--secondary-bg)',
+                                color: 'var(--text-primary)'
+                            }}
+                        />
+                    </div>
                     {employees.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '2rem' }}>
                             <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>👥</div>
@@ -436,9 +463,16 @@ function Admin() {
                                 Няма служители в системата
                             </p>
                         </div>
+                    ) : filteredEmployees.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '2rem' }}>
+                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔎</div>
+                            <p style={{ color: 'var(--text-secondary)' }}>
+                                Няма резултати за "{searchTerm.trim()}"
+                            </p>
+                        </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {employees.map((employee) => (
+                            {filteredEmployees.map((employee) => (
                                 editingEmployee === employee.id ? (
                                     // Edit форма
                                     <div key={employee.id} className="card" style={{ marginBottom: '0.75rem' }}>
